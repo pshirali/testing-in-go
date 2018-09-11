@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Testing in Go</title>
+    <meta charset="utf-8">
+    <script>
+      var notesEnabled =  true ;
+    </script>
+    <link href="Testing_In_Go_files/css_002.css" rel="stylesheet">
+    <link href="Testing_In_Go_files/css.css" rel="stylesheet">
+    <script src="Testing_In_Go_files/slides.js"></script>
+
+    
+    <script>
+      var sections = [{"Number":[1],"Title":"This talk covers ...","Elem":[{"Lines":["1. Unittests, and other forms of automated tests","2. Testing with Go: Tools, packages, other tools etc","3. Test code organization patterns, with examples","4. Guidelines \u0026 Best practices","5. Test fixtures \u0026 Helpers","6. Common fixture patterns"],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[2],"Title":"PART 1 - Unittests, and other forms of automated tests","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[3],"Title":"Unittests","Elem":[{"Lines":["1. Pieces of code meant to test other code.","2. Unittests should follow these principles:"],"Pre":false},{"Lines":["Fast            --- Milliseconds per test. Second(s) (or less) for all tests\nIsolated        --- Order agnostic. No dependency on state, system, test environments etc\nRepeatable      --- Same results anywhere, anytime, any number of times\nSelf-Validating --- A Test can determine by itself whether it failed or passed.\nTimely          --- Tests are written just before the the code they test"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[4],"Title":"Other automated tests","Elem":[{"Lines":["1. Integration, acceptance tests, etc.","2. They have dependencies. The dependencies are real.","3. Tests may involve managing a system state or isolated environments"],"Pre":false},{"Lines":["Setup    - Automatically setup the environment and dependencies\nTeardown - Clean up everything. Restore initial test state"],"Pre":true},{"Lines":["4. Reminder: Its 2018."],"Pre":false}],"Notes":["Reminder: Its 2018.","  Infrastructure automation has been improving heavily over the last few years.","  This has greatly influenced test patterns as well. Today, it is easier to","  automate virtual infrastructure, test deployments, and execute tests against","  the `real thing`. Containers also provide for easy-to-spin-and-discard","  environments which contribute to running repeatable isolated environemnts","  on all kinds of hosts.","  In testing, integration tests are gaining a wider ground with the above","  facilities. This area could expect further growth."],"Classes":null,"Styles":null},{"Number":[5],"Title":"PART 2 - Testing with Go","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[6],"Title":"The Go Test Runner \u0026 Tests in Go","Elem":[{"Lines":["Or simply 'go test' is the tool used to discover and execute tests in Go."],"Pre":false},{"Lines":["\u003e go help test      // description of of what 'go test' does\n\u003e go help tesfunc   // description of the function spec\n\u003e go test -h        // CLI flags and their description\n\u003e go test           // discovers and executes tests in your current package"],"Pre":true},{"Lines":["A function having the following signature:"],"Pre":false},{"Lines":["func TestXxx(*testing.T)"],"Pre":true},{"Lines":["`Xxx` - Must begin with a capital letter"],"Pre":false},{"Lines":["TestInvalidLoginReturnsError     // valid test name\nTestarossaFerrari                // invalid test name"],"Pre":true},{"Lines":["Test function are discovered from filenames ending with *`_test.go`*"],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[7],"Title":"Test APIs, Bench Implementation","Elem":[{"Lines":["1. Go supports `exported` and `private` variable identifiers.","2. Test files which belong to a package have access to both `exported` and `private` code","3. Test files can also exist in a special package with the name `\u003cpackage\u003e_test`.","4. Files from `\u003cpackage\u003e` and `\u003cpackage\u003e_test` can co-exist in the same directory.","5. Code in `\u003cpackage\u003e_test` has access only to `exported` code from `\u003cpackage\u003e`."],"Pre":false},{"Lines":["-- WHY ??"],"Pre":false},{"Lines":["1. Packages should be tested by invoking their exported API.","2. This is what an external package would use to `call-in` to the package under test.","3. Tests residing in the internal `\u003cpackage\u003e` can be used to test finer details of the implementation.","4. Benchmarks are suited for use in internal packages as they are aimed at quantifying implementation performance."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[8],"Title":"Not covered in this talk","Elem":[{"Lines":["Go provides comprehensive set of tools to track code-coverage, benchmark, analyze,","and profile go code. These are not covered in this talk."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[9],"Title":"PART 3 - Test code organization patterns \u0026 examples","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[10],"Title":"[EX1] A 'hello world' through tests","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[11],"Title":"[EX1] Code and results","Elem":[{"Lines":["Contents of 'samples/ex1/sample_test.go'"],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"18\"\u003eimport \u0026#34;testing\u0026#34;\u003c/span\u003e\n\u003cspan num=\"19\"\u003e\u003c/span\u003e\n\u003cspan num=\"20\"\u003efunc TestExample(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"21\"\u003e    t.Log(\u0026#34;Hello World!\u0026#34;)\u003c/span\u003e\n\u003cspan num=\"22\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"sample_test.go","Ext":".go","Raw":"aW1wb3J0ICJ0ZXN0aW5nIgoKZnVuYyBUZXN0RXhhbXBsZSh0ICp0ZXN0aW5nLlQpIHsKCXQuTG9nKCJIZWxsbyBXb3JsZCEiKQp9Cg=="},{"Lines":["Running 'go test' results in:"],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"1\"\u003ePASS\u003c/span\u003e\n\u003cspan num=\"2\"\u003eok      gitlab.com/pshirali/testing-in-go/samples/ex1    0.006s\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"testOutput_normal","Ext":"","Raw":"UEFTUwpvayAgCWdpdGxhYi5jb20vcHNoaXJhbGkvdGVzdGluZy1pbi1nby9zYW1wbGVzL2V4MQkwLjAwNnMK"},{"Lines":["Running 'go test -v' results in verbose output:"],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"1\"\u003e=== RUN   TestExample\u003c/span\u003e\n\u003cspan num=\"2\"\u003e--- PASS: TestExample (0.00s)\u003c/span\u003e\n\u003cspan num=\"3\"\u003e    sample_test.go:6: Hello World!\u003c/span\u003e\n\u003cspan num=\"4\"\u003ePASS\u003c/span\u003e\n\u003cspan num=\"5\"\u003eok      gitlab.com/pshirali/testing-in-go/samples/ex1    0.006s\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"testOutput_verbose","Ext":"","Raw":"PT09IFJVTiAgIFRlc3RFeGFtcGxlCi0tLSBQQVNTOiBUZXN0RXhhbXBsZSAoMC4wMHMpCiAgICBzYW1wbGVfdGVzdC5nbzo2OiBIZWxsbyBXb3JsZCEKUEFTUwpvayAgCWdpdGxhYi5jb20vcHNoaXJhbGkvdGVzdGluZy1pbi1nby9zYW1wbGVzL2V4MQkwLjAwNnMK"}],"Notes":null,"Classes":null,"Styles":null},{"Number":[12],"Title":"The TB interface","Elem":[{"Lines":["Shared by both T and B test types: [[https://golang.org/pkg/testing/#TB]]"],"Pre":false},{"Lines":["Skip"],"Pre":false},{"Lines":["Skip the test from the point where it's called"],"Pre":true},{"Lines":["Log"],"Pre":false},{"Lines":["Log a message. (go test '-v')"],"Pre":true},{"Lines":["Error"],"Pre":false},{"Lines":["Log an error. Marks the test FAIL, but continues execution."],"Pre":true},{"Lines":["Fatal"],"Pre":false},{"Lines":["- Log a fatal error.\n- Mark the test FAIL, and stop execution of the current test.\n- Execute any deferred functions.\n- Proceed to the next test."],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[13],"Title":"[EX2] Table Driven Tests \u0026 Subtests","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[14],"Title":"[EX2] Table Driven Tests - Code under test","Elem":[{"Lines":["Can be used when a test logic needs to be executed\nwith multiple sets of inputs and corresponding results."],"Pre":true},{"Lines":["Example: The 'hello world' of table driven tests!","Add an arbitrary number of integers and return their sum."],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"16\"\u003epackage adder\u003c/span\u003e\n\u003cspan num=\"17\"\u003e\u003c/span\u003e\n\u003cspan num=\"18\"\u003efunc AddInt(integers ...int) int {\u003c/span\u003e\n\u003cspan num=\"19\"\u003e    sum := 0\u003c/span\u003e\n\u003cspan num=\"20\"\u003e    for _, i := range integers {\u003c/span\u003e\n\u003cspan num=\"21\"\u003e        sum \u0026#43;= i\u003c/span\u003e\n\u003cspan num=\"22\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"23\"\u003e    return sum\u003c/span\u003e\n\u003cspan num=\"24\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"adder.go","Ext":".go","Raw":"cGFja2FnZSBhZGRlcgoKZnVuYyBBZGRJbnQoaW50ZWdlcnMgLi4uaW50KSBpbnQgewoJc3VtIDo9IDAKCWZvciBfLCBpIDo9IHJhbmdlIGludGVnZXJzIHsKCQlzdW0gKz0gaQoJfQoJcmV0dXJuIHN1bQp9Cg=="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[15],"Title":"[EX2] Table Driven Tests - Test code","Elem":[{"Lines":["Iterate over test parameters and feed them into the test logic."],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"22\"\u003efunc TestAdderUsingTable(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"23\"\u003e    cases := []struct {\u003c/span\u003e\n\u003cspan num=\"24\"\u003e        integers []int\u003c/span\u003e\n\u003cspan num=\"25\"\u003e        expected int\u003c/span\u003e\n\u003cspan num=\"26\"\u003e    }{\u003c/span\u003e\n\u003cspan num=\"27\"\u003e        {[]int{}, 0},        // -------------------------------------------\u003c/span\u003e\n\u003cspan num=\"28\"\u003e        {[]int{0, 0, 0}, 0}, //  TABLE: { Input, Expected }\u003c/span\u003e\n\u003cspan num=\"29\"\u003e        {[]int{-1, -2}, -3}, //  One set of test params per test iteration\u003c/span\u003e\n\u003cspan num=\"30\"\u003e        {[]int{1, 2, 3}, 6}, // -------------------------------------------\u003c/span\u003e\n\u003cspan num=\"31\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"32\"\u003e\u003c/span\u003e\n\u003cspan num=\"33\"\u003e    for _, c := range cases {\u003c/span\u003e\n\u003cspan num=\"34\"\u003e        t.Logf(\u0026#34;-------------------- Adding: %v\u0026#34;, c.integers)\u003c/span\u003e\n\u003cspan num=\"35\"\u003e        actual := adder.AddInt(c.integers...)\u003c/span\u003e\n\u003cspan num=\"37\"\u003e        if actual != c.expected {\u003c/span\u003e\n\u003cspan num=\"38\"\u003e            t.Errorf(\u0026#34;Sum of %v = %v (Actual). Expected: %v\u0026#34;,\u003c/span\u003e\n\u003cspan num=\"39\"\u003e                c.integers, actual, c.expected)\u003c/span\u003e\n\u003cspan num=\"40\"\u003e        }\u003c/span\u003e\n\u003cspan num=\"42\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"43\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"adder_test.go","Ext":".go","Raw":"ZnVuYyBUZXN0QWRkZXJVc2luZ1RhYmxlKHQgKnRlc3RpbmcuVCkgewoJY2FzZXMgOj0gW11zdHJ1Y3QgewoJCWludGVnZXJzIFtdaW50CgkJZXhwZWN0ZWQgaW50Cgl9ewoJCXtbXWludHt9LCAwfSwgICAgICAgIC8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCQl7W11pbnR7MCwgMCwgMH0sIDB9LCAvLyAgVEFCTEU6IHsgSW5wdXQsIEV4cGVjdGVkIH0KCQl7W11pbnR7LTEsIC0yfSwgLTN9LCAvLyAgT25lIHNldCBvZiB0ZXN0IHBhcmFtcyBwZXIgdGVzdCBpdGVyYXRpb24KCQl7W11pbnR7MSwgMiwgM30sIDZ9LCAvLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgl9CgoJZm9yIF8sIGMgOj0gcmFuZ2UgY2FzZXMgewoJCXQuTG9nZigiLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiAldiIsIGMuaW50ZWdlcnMpCgkJYWN0dWFsIDo9IGFkZGVyLkFkZEludChjLmludGVnZXJzLi4uKQoJCWlmIGFjdHVhbCAhPSBjLmV4cGVjdGVkIHsKCQkJdC5FcnJvcmYoIlN1bSBvZiAldiA9ICV2IChBY3R1YWwpLiBFeHBlY3RlZDogJXYiLAoJCQkJYy5pbnRlZ2VycywgYWN0dWFsLCBjLmV4cGVjdGVkKQoJCX0KCX0KfQo="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[16],"Title":"[EX2] But, it's still a single test!","Elem":[{"Lines":["Output of 'go test -v'"],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"1\"\u003e=== RUN   TestAdderUsingTable\u003c/span\u003e\n\u003cspan num=\"2\"\u003e--- PASS: TestAdderUsingTable (0.00s)\u003c/span\u003e\n\u003cspan num=\"3\"\u003e    adder_test.go:20: -------------------- Adding: []\u003c/span\u003e\n\u003cspan num=\"4\"\u003e    adder_test.go:20: -------------------- Adding: [0 0 0]\u003c/span\u003e\n\u003cspan num=\"5\"\u003e    adder_test.go:20: -------------------- Adding: [-1 -2]\u003c/span\u003e\n\u003cspan num=\"6\"\u003e    adder_test.go:20: -------------------- Adding: [1 2 3]\u003c/span\u003e\n\u003cspan num=\"7\"\u003ePASS\u003c/span\u003e\n\u003cspan num=\"8\"\u003eok      gitlab.com/pshirali/testing-in-go/samples/ex2    0.007s\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"testOutput_tables_singletest","Ext":"","Raw":"PT09IFJVTiAgIFRlc3RBZGRlclVzaW5nVGFibGUKLS0tIFBBU1M6IFRlc3RBZGRlclVzaW5nVGFibGUgKDAuMDBzKQogICAgYWRkZXJfdGVzdC5nbzoyMDogLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiBbXQogICAgYWRkZXJfdGVzdC5nbzoyMDogLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiBbMCAwIDBdCiAgICBhZGRlcl90ZXN0LmdvOjIwOiAtLS0tLS0tLS0tLS0tLS0tLS0tLSBBZGRpbmc6IFstMSAtMl0KICAgIGFkZGVyX3Rlc3QuZ286MjA6IC0tLS0tLS0tLS0tLS0tLS0tLS0tIEFkZGluZzogWzEgMiAzXQpQQVNTCm9rICAJZ2l0bGFiLmNvbS9wc2hpcmFsaS90ZXN0aW5nLWluLWdvL3NhbXBsZXMvZXgyCTAuMDA3cwo="},{"Lines":["Notice the use of t.Errorf, not t.Fatalf"],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"37\"\u003e        if actual != c.expected {\u003c/span\u003e\n\u003cspan num=\"38\"\u003e            t.Errorf(\u0026#34;Sum of %v = %v (Actual). Expected: %v\u0026#34;,\u003c/span\u003e\n\u003cspan num=\"39\"\u003e                c.integers, actual, c.expected)\u003c/span\u003e\n\u003cspan num=\"40\"\u003e        }\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"adder_test.go","Ext":".go","Raw":"CQlpZiBhY3R1YWwgIT0gYy5leHBlY3RlZCB7CgkJCXQuRXJyb3JmKCJTdW0gb2YgJXYgPSAldiAoQWN0dWFsKS4gRXhwZWN0ZWQ6ICV2IiwKCQkJCWMuaW50ZWdlcnMsIGFjdHVhbCwgYy5leHBlY3RlZCkKCQl9Cg=="},{"Lines":["In order to ensure that we continue to test other paramters, should one of them fail,","'t.Errorf' has been used."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[17],"Title":"Is there a better way? -- Yes ---\u003e Subtests","Elem":[{"Lines":["Subtests are tests within a test."],"Pre":false},{"Lines":["Test are named `\u003cParentTest\u003e/\u003cSubTest\u003e`, with slash (/) separating parents from children"],"Pre":false},{"Lines":["Ref: [[https://golang.org/pkg/testing/#hdr-Subtests_and_Sub_benchmarks]]"],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[18],"Title":"[EX2] Table Driven Tests - Using subtests","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"45\"\u003efunc TestAdderUsingSubtests(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"46\"\u003e    cases := []struct {\u003c/span\u003e\n\u003cspan num=\"47\"\u003e        name     string\u003c/span\u003e\n\u003cspan num=\"48\"\u003e        integers []int\u003c/span\u003e\n\u003cspan num=\"49\"\u003e        expected int\u003c/span\u003e\n\u003cspan num=\"50\"\u003e    }{\u003c/span\u003e\n\u003cspan num=\"51\"\u003e        {\u0026#34;Empty\u0026#34;, []int{}, 0},\u003c/span\u003e\n\u003cspan num=\"52\"\u003e        {\u0026#34;Zero\u0026#34;, []int{0, 0, 0}, 0},\u003c/span\u003e\n\u003cspan num=\"53\"\u003e        {\u0026#34;Negative\u0026#34;, []int{-1, -2}, -3},\u003c/span\u003e\n\u003cspan num=\"54\"\u003e        {\u0026#34;Positive\u0026#34;, []int{1, 2, 3}, 6},\u003c/span\u003e\n\u003cspan num=\"55\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"56\"\u003e\u003c/span\u003e\n\u003cspan num=\"57\"\u003e    for _, c := range cases {\u003c/span\u003e\n\u003cspan num=\"58\"\u003e        t.Run(c.name, func(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"59\"\u003e            t.Logf(\u0026#34;-------------------- Adding: %v\u0026#34;, c.integers)\u003c/span\u003e\n\u003cspan num=\"60\"\u003e            actual := adder.AddInt(c.integers...)\u003c/span\u003e\n\u003cspan num=\"61\"\u003e            if actual != c.expected {\u003c/span\u003e\n\u003cspan num=\"62\"\u003e                t.Fatalf(\u0026#34;Sum of %v = %v (Actual). Expected: %v\u0026#34;,\u003c/span\u003e\n\u003cspan num=\"63\"\u003e                    c.integers, actual, c.expected)\u003c/span\u003e\n\u003cspan num=\"64\"\u003e            }\u003c/span\u003e\n\u003cspan num=\"65\"\u003e        })\u003c/span\u003e\n\u003cspan num=\"66\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"67\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"adder_test.go","Ext":".go","Raw":"ZnVuYyBUZXN0QWRkZXJVc2luZ1N1YnRlc3RzKHQgKnRlc3RpbmcuVCkgewoJY2FzZXMgOj0gW11zdHJ1Y3QgewoJCW5hbWUgICAgIHN0cmluZwoJCWludGVnZXJzIFtdaW50CgkJZXhwZWN0ZWQgaW50Cgl9ewoJCXsiRW1wdHkiLCBbXWludHt9LCAwfSwKCQl7Ilplcm8iLCBbXWludHswLCAwLCAwfSwgMH0sCgkJeyJOZWdhdGl2ZSIsIFtdaW50ey0xLCAtMn0sIC0zfSwKCQl7IlBvc2l0aXZlIiwgW11pbnR7MSwgMiwgM30sIDZ9LAoJfQoKCWZvciBfLCBjIDo9IHJhbmdlIGNhc2VzIHsKCQl0LlJ1bihjLm5hbWUsIGZ1bmModCAqdGVzdGluZy5UKSB7CgkJCXQuTG9nZigiLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiAldiIsIGMuaW50ZWdlcnMpCgkJCWFjdHVhbCA6PSBhZGRlci5BZGRJbnQoYy5pbnRlZ2Vycy4uLikKCQkJaWYgYWN0dWFsICE9IGMuZXhwZWN0ZWQgewoJCQkJdC5GYXRhbGYoIlN1bSBvZiAldiA9ICV2IChBY3R1YWwpLiBFeHBlY3RlZDogJXYiLAoJCQkJCWMuaW50ZWdlcnMsIGFjdHVhbCwgYy5leHBlY3RlZCkKCQkJfQoJCX0pCgl9Cn0K"}],"Notes":null,"Classes":null,"Styles":null},{"Number":[19],"Title":"[EX2] Table Driven Tests - Using subtests - Output","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"1\"\u003e=== RUN   TestAdderUsingSubtests\u003c/span\u003e\n\u003cspan num=\"2\"\u003e=== RUN   TestAdderUsingSubtests/Empty\u003c/span\u003e\n\u003cspan num=\"3\"\u003e=== RUN   TestAdderUsingSubtests/Zero\u003c/span\u003e\n\u003cspan num=\"4\"\u003e=== RUN   TestAdderUsingSubtests/Negative\u003c/span\u003e\n\u003cspan num=\"5\"\u003e=== RUN   TestAdderUsingSubtests/Positive\u003c/span\u003e\n\u003cspan num=\"6\"\u003e--- PASS: TestAdderUsingSubtests (0.00s)\u003c/span\u003e\n\u003cspan num=\"7\"\u003e    --- PASS: TestAdderUsingSubtests/Empty (0.00s)\u003c/span\u003e\n\u003cspan num=\"8\"\u003e        adder_test.go:45: -------------------- Adding: []\u003c/span\u003e\n\u003cspan num=\"9\"\u003e    --- PASS: TestAdderUsingSubtests/Zero (0.00s)\u003c/span\u003e\n\u003cspan num=\"10\"\u003e        adder_test.go:45: -------------------- Adding: [0 0 0]\u003c/span\u003e\n\u003cspan num=\"11\"\u003e    --- PASS: TestAdderUsingSubtests/Negative (0.00s)\u003c/span\u003e\n\u003cspan num=\"12\"\u003e        adder_test.go:45: -------------------- Adding: [-1 -2]\u003c/span\u003e\n\u003cspan num=\"13\"\u003e    --- PASS: TestAdderUsingSubtests/Positive (0.00s)\u003c/span\u003e\n\u003cspan num=\"14\"\u003e        adder_test.go:45: -------------------- Adding: [1 2 3]\u003c/span\u003e\n\u003cspan num=\"15\"\u003ePASS\u003c/span\u003e\n\u003cspan num=\"16\"\u003eok      gitlab.com/pshirali/testing-in-go/samples/ex2    0.007s\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"testOutput_tables_subtest","Ext":"","Raw":"PT09IFJVTiAgIFRlc3RBZGRlclVzaW5nU3VidGVzdHMKPT09IFJVTiAgIFRlc3RBZGRlclVzaW5nU3VidGVzdHMvRW1wdHkKPT09IFJVTiAgIFRlc3RBZGRlclVzaW5nU3VidGVzdHMvWmVybwo9PT0gUlVOICAgVGVzdEFkZGVyVXNpbmdTdWJ0ZXN0cy9OZWdhdGl2ZQo9PT0gUlVOICAgVGVzdEFkZGVyVXNpbmdTdWJ0ZXN0cy9Qb3NpdGl2ZQotLS0gUEFTUzogVGVzdEFkZGVyVXNpbmdTdWJ0ZXN0cyAoMC4wMHMpCiAgICAtLS0gUEFTUzogVGVzdEFkZGVyVXNpbmdTdWJ0ZXN0cy9FbXB0eSAoMC4wMHMpCiAgICAgICAgYWRkZXJfdGVzdC5nbzo0NTogLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiBbXQogICAgLS0tIFBBU1M6IFRlc3RBZGRlclVzaW5nU3VidGVzdHMvWmVybyAoMC4wMHMpCiAgICAgICAgYWRkZXJfdGVzdC5nbzo0NTogLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiBbMCAwIDBdCiAgICAtLS0gUEFTUzogVGVzdEFkZGVyVXNpbmdTdWJ0ZXN0cy9OZWdhdGl2ZSAoMC4wMHMpCiAgICAgICAgYWRkZXJfdGVzdC5nbzo0NTogLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiBbLTEgLTJdCiAgICAtLS0gUEFTUzogVGVzdEFkZGVyVXNpbmdTdWJ0ZXN0cy9Qb3NpdGl2ZSAoMC4wMHMpCiAgICAgICAgYWRkZXJfdGVzdC5nbzo0NTogLS0tLS0tLS0tLS0tLS0tLS0tLS0gQWRkaW5nOiBbMSAyIDNdClBBU1MKb2sgIAlnaXRsYWIuY29tL3BzaGlyYWxpL3Rlc3RpbmctaW4tZ28vc2FtcGxlcy9leDIJMC4wMDdzCg=="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[20],"Title":"Try your own helper functions ...","Elem":[{"Lines":["Do experiment with simple helper functions before settling on a 3rd-party lib.","The ones below are not perfect, they are minimal (on purpose)"],"Pre":false},{"Lines":["// SkipIf skips the test if the condition is true\nfunc SkipIf(t *testing.T, condition bool, args ...interface{}) {\n    if condition { t.Skip(args...) }\n}\n\n// Assert fatally fails the test if a condition is false\nfunc Assert(t *testing.T, condition bool, args ...interface{}) {\n    if !condition { t.Fatal(args...) }\n}\n\n// Equal deeply compares two types and fatally fails if they are unequal\nimport \"reflect\"\nfunc Equal(t *testing.T, lhs, rhs interface{}, args ...interface{}) {\n    if !reflect.DeepEqual(lhs, rhs) { t.Fatal(args...) }\n}"],"Pre":true},{"Lines":["The implementation above is used in code samples in rest of the slides."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[21],"Title":"Some more test features ...","Elem":[{"Lines":["t.Helper() -- Ref: [[https://golang.org/src/testing/testing.go?s=24302:24327#L669]]"],"Pre":false},{"Lines":["t.Parallel() -- Ref: [[https://golang.org/src/testing/testing.go?s=25187:25209#L696]]"],"Pre":false},{"Lines":["t.Parallel() in subtests -- Ref: [[https://blog.golang.org/subtests]]"],"Pre":false},{"Lines":["testdata -- Ref: [[https://golang.org/cmd/go/#hdr-Description_of_package_lists]]"],"Pre":false},{"Lines":["Dirs and files that begin with \".\" or \"_\" are ignored by go tool\nDirs named \"testdata\" are ignored"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[22],"Title":"[EX3] Test Suites","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[23],"Title":"[EX3] Example: An Integer counter","Elem":[{"Lines":["1. A counter has an initial value of 0.\n2. Exposes method to increment value. Implicit increment by 1.\n3. Exposes method to retrieve current value.\n4. Exposes method to reset value to 0."],"Pre":true},{"Lines":["Interface (for reference)"],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"16\"\u003epackage counter\u003c/span\u003e\n\u003cspan num=\"17\"\u003e\u003c/span\u003e\n\u003cspan num=\"18\"\u003etype Resetter interface{ Reset() }\u003c/span\u003e\n\u003cspan num=\"19\"\u003etype Incrementer interface{ Increment() }\u003c/span\u003e\n\u003cspan num=\"20\"\u003etype IntValuer interface{ Value() int }\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"ifc.go","Ext":".go","Raw":"cGFja2FnZSBjb3VudGVyCgp0eXBlIFJlc2V0dGVyIGludGVyZmFjZXsgUmVzZXQoKSB9CnR5cGUgSW5jcmVtZW50ZXIgaW50ZXJmYWNleyBJbmNyZW1lbnQoKSB9CnR5cGUgSW50VmFsdWVyIGludGVyZmFjZXsgVmFsdWUoKSBpbnQgfQo="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[24],"Title":"[EX3] An 'unsafe' Counter implementation","Elem":[{"Lines":["Goroutine safety not guaranteed"],"Pre":false},{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"16\"\u003epackage unsafe_counter\u003c/span\u003e\n\u003cspan num=\"17\"\u003e\u003c/span\u003e\n\u003cspan num=\"18\"\u003etype unsafeCounter struct {\u003c/span\u003e\n\u003cspan num=\"19\"\u003e    value int\u003c/span\u003e\n\u003cspan num=\"20\"\u003e}\u003c/span\u003e\n\u003cspan num=\"21\"\u003e\u003c/span\u003e\n\u003cspan num=\"22\"\u003efunc (c *unsafeCounter) Reset()     { c.value = 0 }\u003c/span\u003e\n\u003cspan num=\"23\"\u003efunc (c *unsafeCounter) Increment() { c.value \u0026#43;= 1 }\u003c/span\u003e\n\u003cspan num=\"24\"\u003efunc (c *unsafeCounter) Value() int { return c.value }\u003c/span\u003e\n\u003cspan num=\"25\"\u003e\u003c/span\u003e\n\u003cspan num=\"26\"\u003efunc NewUnsafeCounter() *unsafeCounter {\u003c/span\u003e\n\u003cspan num=\"27\"\u003e    return \u0026amp;unsafeCounter{}\u003c/span\u003e\n\u003cspan num=\"28\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter.go","Ext":".go","Raw":"cGFja2FnZSB1bnNhZmVfY291bnRlcgoKdHlwZSB1bnNhZmVDb3VudGVyIHN0cnVjdCB7Cgl2YWx1ZSBpbnQKfQoKZnVuYyAoYyAqdW5zYWZlQ291bnRlcikgUmVzZXQoKSAgICAgeyBjLnZhbHVlID0gMCB9CmZ1bmMgKGMgKnVuc2FmZUNvdW50ZXIpIEluY3JlbWVudCgpIHsgYy52YWx1ZSArPSAxIH0KZnVuYyAoYyAqdW5zYWZlQ291bnRlcikgVmFsdWUoKSBpbnQgeyByZXR1cm4gYy52YWx1ZSB9CgpmdW5jIE5ld1Vuc2FmZUNvdW50ZXIoKSAqdW5zYWZlQ291bnRlciB7CglyZXR1cm4gJnVuc2FmZUNvdW50ZXJ7fQp9Cg=="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[25],"Title":"[EX3] Some (non-comprehensive) test code ...","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"31\"\u003efunc TestCounterIncrementIncreasesValue(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"32\"\u003e    c := NewUnsafeCounter()\u003c/span\u003e\n\u003cspan num=\"33\"\u003e    for i := 1; i \u0026lt; 3; i\u0026#43;\u0026#43; {\u003c/span\u003e\n\u003cspan num=\"34\"\u003e        c.Increment()\u003c/span\u003e\n\u003cspan num=\"35\"\u003e        Assert(t, c.Value() == i, \u0026#34;At Step:\u0026#34;, i, \u0026#34;!=\u0026#34;, c.Value())\u003c/span\u003e\n\u003cspan num=\"36\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"37\"\u003e}\u003c/span\u003e\n\u003cspan num=\"38\"\u003e\u003c/span\u003e\n\u003cspan num=\"39\"\u003efunc TestCounterIncrementReset(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"40\"\u003e    c := NewUnsafeCounter()\u003c/span\u003e\n\u003cspan num=\"41\"\u003e    for i := 0; i \u0026lt; 2; i\u0026#43;\u0026#43; {\u003c/span\u003e\n\u003cspan num=\"42\"\u003e        c.Increment()\u003c/span\u003e\n\u003cspan num=\"43\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"44\"\u003e    c.Reset()\u003c/span\u003e\n\u003cspan num=\"45\"\u003e    Assert(t, c.Value() == 0, \u0026#34;Expected 0 after Reset. Got:\u0026#34;, c.Value())\u003c/span\u003e\n\u003cspan num=\"46\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter_test.go","Ext":".go","Raw":"ZnVuYyBUZXN0Q291bnRlckluY3JlbWVudEluY3JlYXNlc1ZhbHVlKHQgKnRlc3RpbmcuVCkgewoJYyA6PSBOZXdVbnNhZmVDb3VudGVyKCkKCWZvciBpIDo9IDE7IGkgPCAzOyBpKysgewoJCWMuSW5jcmVtZW50KCkKCQlBc3NlcnQodCwgYy5WYWx1ZSgpID09IGksICJBdCBTdGVwOiIsIGksICIhPSIsIGMuVmFsdWUoKSkKCX0KfQoKZnVuYyBUZXN0Q291bnRlckluY3JlbWVudFJlc2V0KHQgKnRlc3RpbmcuVCkgewoJYyA6PSBOZXdVbnNhZmVDb3VudGVyKCkKCWZvciBpIDo9IDA7IGkgPCAyOyBpKysgewoJCWMuSW5jcmVtZW50KCkKCX0KCWMuUmVzZXQoKQoJQXNzZXJ0KHQsIGMuVmFsdWUoKSA9PSAwLCAiRXhwZWN0ZWQgMCBhZnRlciBSZXNldC4gR290OiIsIGMuVmFsdWUoKSkKfQo="},{"Lines":["Counters are stateful. We need a fresh instance in each test."],"Pre":false},{"Lines":["c := NewUnsafeCounter()"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[26],"Title":"[EX3] A 'safe' Counter implementation","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"30\"\u003etype safeCounter struct {\u003c/span\u003e\n\u003cspan num=\"31\"\u003e    mu sync.RWMutex\u003c/span\u003e\n\u003cspan num=\"32\"\u003e    uc UnsafeCounter\u003c/span\u003e\n\u003cspan num=\"33\"\u003e}\u003c/span\u003e\n\u003cspan num=\"34\"\u003e\u003c/span\u003e\n\u003cspan num=\"35\"\u003efunc (c *safeCounter) Reset() {\u003c/span\u003e\n\u003cspan num=\"36\"\u003e    c.mu.Lock()\u003c/span\u003e\n\u003cspan num=\"37\"\u003e    defer c.mu.Unlock()\u003c/span\u003e\n\u003cspan num=\"38\"\u003e    c.uc.Reset()\u003c/span\u003e\n\u003cspan num=\"39\"\u003e}\u003c/span\u003e\n\u003cspan num=\"40\"\u003efunc (c *safeCounter) Increment() {\u003c/span\u003e\n\u003cspan num=\"41\"\u003e    c.mu.Lock()\u003c/span\u003e\n\u003cspan num=\"42\"\u003e    defer c.mu.Unlock()\u003c/span\u003e\n\u003cspan num=\"43\"\u003e    c.uc.Increment()\u003c/span\u003e\n\u003cspan num=\"44\"\u003e}\u003c/span\u003e\n\u003cspan num=\"45\"\u003efunc (c *safeCounter) Value() int {\u003c/span\u003e\n\u003cspan num=\"46\"\u003e    c.mu.RLock()\u003c/span\u003e\n\u003cspan num=\"47\"\u003e    defer c.mu.RUnlock()\u003c/span\u003e\n\u003cspan num=\"48\"\u003e    return c.uc.Value()\u003c/span\u003e\n\u003cspan num=\"49\"\u003e}\u003c/span\u003e\n\u003cspan num=\"50\"\u003efunc NewSafeCounter() *safeCounter {\u003c/span\u003e\n\u003cspan num=\"51\"\u003e    return \u0026amp;safeCounter{uc: NewUnsafeCounter()}\u003c/span\u003e\n\u003cspan num=\"52\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter.go","Ext":".go","Raw":"dHlwZSBzYWZlQ291bnRlciBzdHJ1Y3QgewoJbXUgc3luYy5SV011dGV4Cgl1YyBVbnNhZmVDb3VudGVyCn0KCmZ1bmMgKGMgKnNhZmVDb3VudGVyKSBSZXNldCgpIHsKCWMubXUuTG9jaygpCglkZWZlciBjLm11LlVubG9jaygpCgljLnVjLlJlc2V0KCkKfQpmdW5jIChjICpzYWZlQ291bnRlcikgSW5jcmVtZW50KCkgewoJYy5tdS5Mb2NrKCkKCWRlZmVyIGMubXUuVW5sb2NrKCkKCWMudWMuSW5jcmVtZW50KCkKfQpmdW5jIChjICpzYWZlQ291bnRlcikgVmFsdWUoKSBpbnQgewoJYy5tdS5STG9jaygpCglkZWZlciBjLm11LlJVbmxvY2soKQoJcmV0dXJuIGMudWMuVmFsdWUoKQp9CmZ1bmMgTmV3U2FmZUNvdW50ZXIoKSAqc2FmZUNvdW50ZXIgewoJcmV0dXJuICZzYWZlQ291bnRlcnt1YzogTmV3VW5zYWZlQ291bnRlcigpfQp9Cg=="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[27],"Title":"[EX3] Desired solution","Elem":[{"Lines":["(X set of tests) * (Y set of inputs)"],"Pre":false},{"Lines":["In our example:"],"Pre":false},{"Lines":["X = All tests which test the behavior of 'Counter' interface\nY = Multiple implementations which satisfy 'Counter'\n    Thus, each implementation must satisfy all tests in X"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[28],"Title":"[EX3] Problem: Constructors with varying signatures","Elem":[{"Lines":["NewUnsafeCounter() *unsafeCounter\nNewSafeCounter() *safeCounter"],"Pre":true},{"Lines":["Lets assume:"],"Pre":false},{"Lines":["- We only have access to the constructor function, not the structs\n- We only get pointers to respective structs\n- Constructor signatures are (and also assumed to be) different for\n  each implementation\n- The only 'commonality' is that the respective structs satisfy \n  a common (in this case 'Counter') interface"],"Pre":true},{"Lines":["We can't natively pass the constructor of each implementation to","any common test executor function."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[29],"Title":"[EX3] Create a 'Builder' for each implementation","Elem":[{"Lines":["The builder encapsulates the construction of each implementation, and","its dependencies."],"Pre":false},{"Lines":["It exposes a uniform interface through which new","instances of each implementation can be generated."],"Pre":false},{"Lines":["type CounterBuilder func() Counter"],"Pre":true},{"Lines":["This could be achieved by a function."],"Pre":false},{"Lines":["func \u003cInterface\u003eBuilder() \u003cInterface\u003e {\n    // instantiate dependencies here\n    // return a new instance here\n    return \u003cConstructor\u003e() // returns a pointer\n}"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[30],"Title":"[EX3] Applying this to our counters","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"57\"\u003efunc UnsafeCounterBuilder() Counter {\u003c/span\u003e\n\u003cspan num=\"58\"\u003e    return NewUnsafeCounter() // returns *unsafeCounter\u003c/span\u003e\n\u003cspan num=\"59\"\u003e}\u003c/span\u003e\n\u003cspan num=\"60\"\u003e\u003c/span\u003e\n\u003cspan num=\"61\"\u003efunc SafeCounterBuilder() Counter {\u003c/span\u003e\n\u003cspan num=\"62\"\u003e    return NewSafeCounter() // returns *safeCounter\u003c/span\u003e\n\u003cspan num=\"63\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter_suite_test.go","Ext":".go","Raw":"ZnVuYyBVbnNhZmVDb3VudGVyQnVpbGRlcigpIENvdW50ZXIgewoJcmV0dXJuIE5ld1Vuc2FmZUNvdW50ZXIoKSAvLyByZXR1cm5zICp1bnNhZmVDb3VudGVyCn0KCmZ1bmMgU2FmZUNvdW50ZXJCdWlsZGVyKCkgQ291bnRlciB7CglyZXR1cm4gTmV3U2FmZUNvdW50ZXIoKSAvLyByZXR1cm5zICpzYWZlQ291bnRlcgp9Cg=="},{"Lines":["Now both Builders satisfy the signature"],"Pre":false},{"Lines":["func() Counter"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[31],"Title":"[EX3] Lets create a Suite","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"68\"\u003etype suite struct {\u003c/span\u003e\n\u003cspan num=\"69\"\u003e    builder func() Counter\u003c/span\u003e\n\u003cspan num=\"70\"\u003e}\u003c/span\u003e\n\u003cspan num=\"71\"\u003e\u003c/span\u003e\n\u003cspan num=\"72\"\u003efunc Suite(builder func() Counter) *suite {\u003c/span\u003e\n\u003cspan num=\"73\"\u003e    return \u0026amp;suite{builder: builder}\u003c/span\u003e\n\u003cspan num=\"74\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter_suite_test.go","Ext":".go","Raw":"dHlwZSBzdWl0ZSBzdHJ1Y3QgewoJYnVpbGRlciBmdW5jKCkgQ291bnRlcgp9CgpmdW5jIFN1aXRlKGJ1aWxkZXIgZnVuYygpIENvdW50ZXIpICpzdWl0ZSB7CglyZXR1cm4gJnN1aXRle2J1aWxkZXI6IGJ1aWxkZXJ9Cn0K"}],"Notes":null,"Classes":null,"Styles":null},{"Number":[32],"Title":"[EX3] Add tests ...","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"83\"\u003efunc (s *suite) TestCounterIncrementIncreasesValue(t *testing.T) {     // Added (s *suite)\u003c/span\u003e\n\u003cspan num=\"84\"\u003e    c := s.builder()              // \u0026lt;---------------------- new instance built by builder\u003c/span\u003e\n\u003cspan num=\"85\"\u003e    for i := 1; i \u0026lt; 3; i\u0026#43;\u0026#43; {\u003c/span\u003e\n\u003cspan num=\"86\"\u003e        c.Increment()\u003c/span\u003e\n\u003cspan num=\"87\"\u003e        Assert(t, c.Value() == i, \u0026#34;At Step:\u0026#34;, i, \u0026#34;!=\u0026#34;, c.Value())\u003c/span\u003e\n\u003cspan num=\"88\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"89\"\u003e}\u003c/span\u003e\n\u003cspan num=\"90\"\u003e\u003c/span\u003e\n\u003cspan num=\"91\"\u003efunc (s *suite) TestCounterIncrementReset(t *testing.T) {              // Added (s *suite)\u003c/span\u003e\n\u003cspan num=\"92\"\u003e    c := s.builder()              // \u0026lt;---------------------- new instance built by builder\u003c/span\u003e\n\u003cspan num=\"93\"\u003e    for i := 0; i \u0026lt; 2; i\u0026#43;\u0026#43; {\u003c/span\u003e\n\u003cspan num=\"94\"\u003e        c.Increment()\u003c/span\u003e\n\u003cspan num=\"95\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"96\"\u003e    c.Reset()\u003c/span\u003e\n\u003cspan num=\"97\"\u003e    Assert(t, c.Value() == 0, \u0026#34;Expected 0 after Reset. Got:\u0026#34;, c.Value())\u003c/span\u003e\n\u003cspan num=\"98\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter_suite_test.go","Ext":".go","Raw":"ZnVuYyAocyAqc3VpdGUpIFRlc3RDb3VudGVySW5jcmVtZW50SW5jcmVhc2VzVmFsdWUodCAqdGVzdGluZy5UKSB7ICAgICAvLyBBZGRlZCAocyAqc3VpdGUpCgljIDo9IHMuYnVpbGRlcigpICAgICAgICAgICAgICAvLyA8LS0tLS0tLS0tLS0tLS0tLS0tLS0tLSBuZXcgaW5zdGFuY2UgYnVpbHQgYnkgYnVpbGRlcgoJZm9yIGkgOj0gMTsgaSA8IDM7IGkrKyB7CgkJYy5JbmNyZW1lbnQoKQoJCUFzc2VydCh0LCBjLlZhbHVlKCkgPT0gaSwgIkF0IFN0ZXA6IiwgaSwgIiE9IiwgYy5WYWx1ZSgpKQoJfQp9CgpmdW5jIChzICpzdWl0ZSkgVGVzdENvdW50ZXJJbmNyZW1lbnRSZXNldCh0ICp0ZXN0aW5nLlQpIHsgICAgICAgICAgICAgIC8vIEFkZGVkIChzICpzdWl0ZSkKCWMgOj0gcy5idWlsZGVyKCkgICAgICAgICAgICAgIC8vIDwtLS0tLS0tLS0tLS0tLS0tLS0tLS0tIG5ldyBpbnN0YW5jZSBidWlsdCBieSBidWlsZGVyCglmb3IgaSA6PSAwOyBpIDwgMjsgaSsrIHsKCQljLkluY3JlbWVudCgpCgl9CgljLlJlc2V0KCkKCUFzc2VydCh0LCBjLlZhbHVlKCkgPT0gMCwgIkV4cGVjdGVkIDAgYWZ0ZXIgUmVzZXQuIEdvdDoiLCBjLlZhbHVlKCkpCn0K"},{"Lines":["Changes to the first two lines"],"Pre":false},{"Lines":["1. Tests are now methods implemented on Suite struct\n2. Each test gets a fresh instance of Counter supplied by `s.builder()`"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[33],"Title":"[EX3] Add the runner ...","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"102\"\u003efunc (s *suite) RunAllTests(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"103\"\u003e    v := reflect.ValueOf(s)                                 //  1. Reflect on the suite\u003c/span\u003e\n\u003cspan num=\"104\"\u003e    for n := 0; n \u0026lt; v.NumMethod(); n\u0026#43;\u0026#43; {                    //  2. Iterate through method numbers\u003c/span\u003e\n\u003cspan num=\"105\"\u003e        i := v.Method(n).Interface()                        //  3. Get the method as interface{}\u003c/span\u003e\n\u003cspan num=\"106\"\u003e        if method, ok := i.(func(*testing.T)); ok {         //  4. If it matches test signature\u003c/span\u003e\n\u003cspan num=\"107\"\u003e            methodName := reflect.TypeOf(s).Method(n).Name  //  5. Get the method\u0026#39;s name\u003c/span\u003e\n\u003cspan num=\"108\"\u003e            if strings.HasPrefix(methodName, \u0026#34;Test\u0026#34;) {      //  6. If it begins with \u0026#39;Test\u0026#39;\u003c/span\u003e\n\u003cspan num=\"109\"\u003e                t.Run(methodName, method)                   //  7. Run that method as a test\u003c/span\u003e\n\u003cspan num=\"110\"\u003e            }\u003c/span\u003e\n\u003cspan num=\"111\"\u003e        }\u003c/span\u003e\n\u003cspan num=\"112\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"113\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter_suite_test.go","Ext":".go","Raw":"ZnVuYyAocyAqc3VpdGUpIFJ1bkFsbFRlc3RzKHQgKnRlc3RpbmcuVCkgewoJdiA6PSByZWZsZWN0LlZhbHVlT2YocykgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAvLyAgMS4gUmVmbGVjdCBvbiB0aGUgc3VpdGUKCWZvciBuIDo9IDA7IG4gPCB2Lk51bU1ldGhvZCgpOyBuKysgeyAgICAgICAgICAgICAgICAgICAgLy8gIDIuIEl0ZXJhdGUgdGhyb3VnaCBtZXRob2QgbnVtYmVycwoJCWkgOj0gdi5NZXRob2QobikuSW50ZXJmYWNlKCkgICAgICAgICAgICAgICAgICAgICAgICAvLyAgMy4gR2V0IHRoZSBtZXRob2QgYXMgaW50ZXJmYWNle30KCQlpZiBtZXRob2QsIG9rIDo9IGkuKGZ1bmMoKnRlc3RpbmcuVCkpOyBvayB7ICAgICAgICAgLy8gIDQuIElmIGl0IG1hdGNoZXMgdGVzdCBzaWduYXR1cmUKCQkJbWV0aG9kTmFtZSA6PSByZWZsZWN0LlR5cGVPZihzKS5NZXRob2QobikuTmFtZSAgLy8gIDUuIEdldCB0aGUgbWV0aG9kJ3MgbmFtZQoJCQlpZiBzdHJpbmdzLkhhc1ByZWZpeChtZXRob2ROYW1lLCAiVGVzdCIpIHsgICAgICAvLyAgNi4gSWYgaXQgYmVnaW5zIHdpdGggJ1Rlc3QnCgkJCQl0LlJ1bihtZXRob2ROYW1lLCBtZXRob2QpICAgICAgICAgICAgICAgICAgIC8vICA3LiBSdW4gdGhhdCBtZXRob2QgYXMgYSB0ZXN0CgkJCX0KCQl9Cgl9Cn0K"},{"Lines":["Note:"],"Pre":false},{"Lines":["The method 'RunAllTests' also matches the test signature 'func(*testing.T)'\nStep 6 exists to exclude 'RunAllTests' and avoid a recursive loop"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[34],"Title":"[EX3] Finally, the TestCounterSuite","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"138\"\u003efunc TestCounterSuite(t *testing.T) {    // Table \u0026#43; Subtest driven tests against the Suite\u003c/span\u003e\n\u003cspan num=\"139\"\u003e    cases := []struct {\u003c/span\u003e\n\u003cspan num=\"140\"\u003e        name    string\u003c/span\u003e\n\u003cspan num=\"141\"\u003e        builder func() Counter\u003c/span\u003e\n\u003cspan num=\"142\"\u003e    }{\u003c/span\u003e\n\u003cspan num=\"143\"\u003e        {\u0026#34;SafeCounter\u0026#34;, SafeCounterBuilder},\u003c/span\u003e\n\u003cspan num=\"144\"\u003e        {\u0026#34;UnsafeCounter\u0026#34;, UnsafeCounterBuilder},\u003c/span\u003e\n\u003cspan num=\"145\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"146\"\u003e\u003c/span\u003e\n\u003cspan num=\"147\"\u003e    for _, c := range cases {\u003c/span\u003e\n\u003cspan num=\"148\"\u003e        t.Run(c.name, Suite(c.builder).RunAllTests)\u003c/span\u003e\n\u003cspan num=\"149\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"150\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter_suite_test.go","Ext":".go","Raw":"ZnVuYyBUZXN0Q291bnRlclN1aXRlKHQgKnRlc3RpbmcuVCkgewkvLyBUYWJsZSArIFN1YnRlc3QgZHJpdmVuIHRlc3RzIGFnYWluc3QgdGhlIFN1aXRlCgljYXNlcyA6PSBbXXN0cnVjdCB7CgkJbmFtZSAgICBzdHJpbmcKCQlidWlsZGVyIGZ1bmMoKSBDb3VudGVyCgl9ewoJCXsiU2FmZUNvdW50ZXIiLCBTYWZlQ291bnRlckJ1aWxkZXJ9LAoJCXsiVW5zYWZlQ291bnRlciIsIFVuc2FmZUNvdW50ZXJCdWlsZGVyfSwKCX0KCglmb3IgXywgYyA6PSByYW5nZSBjYXNlcyB7CgkJdC5SdW4oYy5uYW1lLCBTdWl0ZShjLmJ1aWxkZXIpLlJ1bkFsbFRlc3RzKQoJfQp9Cg=="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[35],"Title":"[EX3] Suite - Output","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"1\"\u003esamples/ex3/test_suite $\u0026gt; go test -v\u003c/span\u003e\n\u003cspan num=\"2\"\u003e\u003c/span\u003e\n\u003cspan num=\"3\"\u003e=== RUN   TestCounterSuite\u003c/span\u003e\n\u003cspan num=\"4\"\u003e=== RUN   TestCounterSuite/SafeCounter\u003c/span\u003e\n\u003cspan num=\"5\"\u003e=== RUN   TestCounterSuite/SafeCounter/TestCounterIncrementIncreasesValue\u003c/span\u003e\n\u003cspan num=\"6\"\u003e=== RUN   TestCounterSuite/SafeCounter/TestCounterIncrementReset\u003c/span\u003e\n\u003cspan num=\"7\"\u003e=== RUN   TestCounterSuite/UnsafeCounter\u003c/span\u003e\n\u003cspan num=\"8\"\u003e=== RUN   TestCounterSuite/UnsafeCounter/TestCounterIncrementIncreasesValue\u003c/span\u003e\n\u003cspan num=\"9\"\u003e=== RUN   TestCounterSuite/UnsafeCounter/TestCounterIncrementReset\u003c/span\u003e\n\u003cspan num=\"10\"\u003e--- PASS: TestCounterSuite (0.00s)\u003c/span\u003e\n\u003cspan num=\"11\"\u003e    --- PASS: TestCounterSuite/SafeCounter (0.00s)\u003c/span\u003e\n\u003cspan num=\"12\"\u003e        --- PASS: TestCounterSuite/SafeCounter/TestCounterIncrementIncreasesValue (0.00s)\u003c/span\u003e\n\u003cspan num=\"13\"\u003e        --- PASS: TestCounterSuite/SafeCounter/TestCounterIncrementReset (0.00s)\u003c/span\u003e\n\u003cspan num=\"14\"\u003e    --- PASS: TestCounterSuite/UnsafeCounter (0.00s)\u003c/span\u003e\n\u003cspan num=\"15\"\u003e        --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementIncreasesValue (0.00s)\u003c/span\u003e\n\u003cspan num=\"16\"\u003e        --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementReset (0.00s)\u003c/span\u003e\n\u003cspan num=\"17\"\u003ePASS\u003c/span\u003e\n\u003cspan num=\"18\"\u003eok      gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite    0.007s\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"suite_output","Ext":"","Raw":"c2FtcGxlcy9leDMvdGVzdF9zdWl0ZSAkPiBnbyB0ZXN0IC12Cgo9PT0gUlVOICAgVGVzdENvdW50ZXJTdWl0ZQo9PT0gUlVOICAgVGVzdENvdW50ZXJTdWl0ZS9TYWZlQ291bnRlcgo9PT0gUlVOICAgVGVzdENvdW50ZXJTdWl0ZS9TYWZlQ291bnRlci9UZXN0Q291bnRlckluY3JlbWVudEluY3JlYXNlc1ZhbHVlCj09PSBSVU4gICBUZXN0Q291bnRlclN1aXRlL1NhZmVDb3VudGVyL1Rlc3RDb3VudGVySW5jcmVtZW50UmVzZXQKPT09IFJVTiAgIFRlc3RDb3VudGVyU3VpdGUvVW5zYWZlQ291bnRlcgo9PT0gUlVOICAgVGVzdENvdW50ZXJTdWl0ZS9VbnNhZmVDb3VudGVyL1Rlc3RDb3VudGVySW5jcmVtZW50SW5jcmVhc2VzVmFsdWUKPT09IFJVTiAgIFRlc3RDb3VudGVyU3VpdGUvVW5zYWZlQ291bnRlci9UZXN0Q291bnRlckluY3JlbWVudFJlc2V0Ci0tLSBQQVNTOiBUZXN0Q291bnRlclN1aXRlICgwLjAwcykKICAgIC0tLSBQQVNTOiBUZXN0Q291bnRlclN1aXRlL1NhZmVDb3VudGVyICgwLjAwcykKICAgICAgICAtLS0gUEFTUzogVGVzdENvdW50ZXJTdWl0ZS9TYWZlQ291bnRlci9UZXN0Q291bnRlckluY3JlbWVudEluY3JlYXNlc1ZhbHVlICgwLjAwcykKICAgICAgICAtLS0gUEFTUzogVGVzdENvdW50ZXJTdWl0ZS9TYWZlQ291bnRlci9UZXN0Q291bnRlckluY3JlbWVudFJlc2V0ICgwLjAwcykKICAgIC0tLSBQQVNTOiBUZXN0Q291bnRlclN1aXRlL1Vuc2FmZUNvdW50ZXIgKDAuMDBzKQogICAgICAgIC0tLSBQQVNTOiBUZXN0Q291bnRlclN1aXRlL1Vuc2FmZUNvdW50ZXIvVGVzdENvdW50ZXJJbmNyZW1lbnRJbmNyZWFzZXNWYWx1ZSAoMC4wMHMpCiAgICAgICAgLS0tIFBBU1M6IFRlc3RDb3VudGVyU3VpdGUvVW5zYWZlQ291bnRlci9UZXN0Q291bnRlckluY3JlbWVudFJlc2V0ICgwLjAwcykKUEFTUwpvayAgCWdpdGxhYi5jb20vcHNoaXJhbGkvdGVzdGluZy1pbi1nby9zYW1wbGVzL2V4My90ZXN0X3N1aXRlCTAuMDA3cwo="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[36],"Title":"[EX3] Suite - Addresses of *testing.T and counters","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"1\"\u003esamples/ex3/test_suite $\u0026gt; go test -d\u003c/span\u003e\n\u003cspan num=\"2\"\u003e\u003c/span\u003e\n\u003cspan num=\"3\"\u003e@@ TestCounterSuite : 0xc0000a6100 *testing.T\u003c/span\u003e\n\u003cspan num=\"4\"\u003e   ==== RunAllTests : 0xc0000a6200 *testing.T\u003c/span\u003e\n\u003cspan num=\"5\"\u003e        ===== Test1 : 0xc0000a6300 *testing.T\u003c/span\u003e\n\u003cspan num=\"6\"\u003e         \\_ Counter : 0xc0000b0080 *safe_counter.safeCounter\u003c/span\u003e\n\u003cspan num=\"7\"\u003e        ===== Test2 : 0xc0000a6400 *testing.T\u003c/span\u003e\n\u003cspan num=\"8\"\u003e         \\_ Counter : 0xc0000b00e0 *safe_counter.safeCounter\u003c/span\u003e\n\u003cspan num=\"9\"\u003e   ==== RunAllTests : 0xc0000a6500 *testing.T\u003c/span\u003e\n\u003cspan num=\"10\"\u003e        ===== Test1 : 0xc0000a6600 *testing.T\u003c/span\u003e\n\u003cspan num=\"11\"\u003e         \\_ Counter : 0xc000070238 *unsafe_counter.unsafeCounter\u003c/span\u003e\n\u003cspan num=\"12\"\u003e        ===== Test2 : 0xc0000a6700 *testing.T\u003c/span\u003e\n\u003cspan num=\"13\"\u003e         \\_ Counter : 0xc000070308 *unsafe_counter.unsafeCounter\u003c/span\u003e\n\u003cspan num=\"14\"\u003ePASS\u003c/span\u003e\n\u003cspan num=\"15\"\u003eok      gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite    0.007s\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"suite_debug","Ext":"","Raw":"c2FtcGxlcy9leDMvdGVzdF9zdWl0ZSAkPiBnbyB0ZXN0IC1kCgpAQCBUZXN0Q291bnRlclN1aXRlIDogMHhjMDAwMGE2MTAwICp0ZXN0aW5nLlQKICAgPT09PSBSdW5BbGxUZXN0cyA6IDB4YzAwMDBhNjIwMCAqdGVzdGluZy5UCiAgICAgICAgPT09PT0gVGVzdDEgOiAweGMwMDAwYTYzMDAgKnRlc3RpbmcuVAogICAgICAgICBcXyBDb3VudGVyIDogMHhjMDAwMGIwMDgwICpzYWZlX2NvdW50ZXIuc2FmZUNvdW50ZXIKICAgICAgICA9PT09PSBUZXN0MiA6IDB4YzAwMDBhNjQwMCAqdGVzdGluZy5UCiAgICAgICAgIFxfIENvdW50ZXIgOiAweGMwMDAwYjAwZTAgKnNhZmVfY291bnRlci5zYWZlQ291bnRlcgogICA9PT09IFJ1bkFsbFRlc3RzIDogMHhjMDAwMGE2NTAwICp0ZXN0aW5nLlQKICAgICAgICA9PT09PSBUZXN0MSA6IDB4YzAwMDBhNjYwMCAqdGVzdGluZy5UCiAgICAgICAgIFxfIENvdW50ZXIgOiAweGMwMDAwNzAyMzggKnVuc2FmZV9jb3VudGVyLnVuc2FmZUNvdW50ZXIKICAgICAgICA9PT09PSBUZXN0MiA6IDB4YzAwMDBhNjcwMCAqdGVzdGluZy5UCiAgICAgICAgIFxfIENvdW50ZXIgOiAweGMwMDAwNzAzMDggKnVuc2FmZV9jb3VudGVyLnVuc2FmZUNvdW50ZXIKUEFTUwpvayAgCWdpdGxhYi5jb20vcHNoaXJhbGkvdGVzdGluZy1pbi1nby9zYW1wbGVzL2V4My90ZXN0X3N1aXRlCTAuMDA3cwo="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[37],"Title":"[EX3] Before and After functions for Suite and Tests","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"117\"\u003efunc (s *suite) RunAllTests(t *testing.T) {\u003c/span\u003e\n\u003cspan num=\"118\"\u003e    //\u003c/span\u003e\n\u003cspan num=\"119\"\u003e    // Before and After Suite (defer \u0026lt;After\u0026gt;())\u003c/span\u003e\n\u003cspan num=\"120\"\u003e    //\u003c/span\u003e\n\u003cspan num=\"121\"\u003e    v := reflect.ValueOf(s)\u003c/span\u003e\n\u003cspan num=\"122\"\u003e    for n := 0; n \u0026lt; v.NumMethod(); n\u0026#43;\u0026#43; {\u003c/span\u003e\n\u003cspan num=\"123\"\u003e        i := v.Method(n).Interface()\u003c/span\u003e\n\u003cspan num=\"124\"\u003e        if method, ok := i.(func(*testing.T)); ok {\u003c/span\u003e\n\u003cspan num=\"125\"\u003e            methodName := reflect.TypeOf(s).Method(n).Name\u003c/span\u003e\n\u003cspan num=\"126\"\u003e            if strings.HasPrefix(methodName, \u0026#34;Test\u0026#34;) {\u003c/span\u003e\n\u003cspan num=\"127\"\u003e                // Before Test\u003c/span\u003e\n\u003cspan num=\"128\"\u003e                // (don\u0026#39;t defer \u0026lt;AfterTest\u0026gt;() here, inside a loop)\u003c/span\u003e\n\u003cspan num=\"129\"\u003e                t.Run(methodName, method)\u003c/span\u003e\n\u003cspan num=\"130\"\u003e                // After Test\u003c/span\u003e\n\u003cspan num=\"131\"\u003e            }\u003c/span\u003e\n\u003cspan num=\"132\"\u003e        }\u003c/span\u003e\n\u003cspan num=\"133\"\u003e    }\u003c/span\u003e\n\u003cspan num=\"134\"\u003e}\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"counter_suite_test.go","Ext":".go","Raw":"ZnVuYyAocyAqc3VpdGUpIFJ1bkFsbFRlc3RzKHQgKnRlc3RpbmcuVCkgewoJLy8KCS8vIEJlZm9yZSBhbmQgQWZ0ZXIgU3VpdGUgKGRlZmVyIDxBZnRlcj4oKSkKCS8vCgl2IDo9IHJlZmxlY3QuVmFsdWVPZihzKQoJZm9yIG4gOj0gMDsgbiA8IHYuTnVtTWV0aG9kKCk7IG4rKyB7CgkJaSA6PSB2Lk1ldGhvZChuKS5JbnRlcmZhY2UoKQoJCWlmIG1ldGhvZCwgb2sgOj0gaS4oZnVuYygqdGVzdGluZy5UKSk7IG9rIHsKCQkJbWV0aG9kTmFtZSA6PSByZWZsZWN0LlR5cGVPZihzKS5NZXRob2QobikuTmFtZQoJCQlpZiBzdHJpbmdzLkhhc1ByZWZpeChtZXRob2ROYW1lLCAiVGVzdCIpIHsKCQkJCS8vIEJlZm9yZSBUZXN0CgkJCQkvLyAoZG9uJ3QgZGVmZXIgPEFmdGVyVGVzdD4oKSBoZXJlLCBpbnNpZGUgYSBsb29wKQoJCQkJdC5SdW4obWV0aG9kTmFtZSwgbWV0aG9kKQoJCQkJLy8gQWZ0ZXIgVGVzdAoJCQl9CgkJfQoJfQp9Cg=="},{"Lines":["Use them more for test agnostic checks like timing, log, leak detection etc.","Test code and its dependencies should remain within the test"],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[38],"Title":"[EX3] Suite - Wrapper behavior","Elem":[{"Text":"\n\n\n\u003cpre\u003e\u003cspan num=\"1\"\u003esamples/ex3/test_suite $\u0026gt; go test -w\u003c/span\u003e\n\u003cspan num=\"2\"\u003e\u003c/span\u003e\n\u003cspan num=\"3\"\u003e    \u0026gt;\u0026gt;\u0026gt; [ RunAllTests -Before- ] \u0026gt;\u0026gt;\u0026gt;            // SafeCounter\u003c/span\u003e\n\u003cspan num=\"4\"\u003e\u003c/span\u003e\n\u003cspan num=\"5\"\u003e        --- [ BeforeTest: TestCounterIncrementIncreasesValue ] ---\u003c/span\u003e\n\u003cspan num=\"6\"\u003e        --- [ AfterTest: TestCounterIncrementIncreasesValue ] ---\u003c/span\u003e\n\u003cspan num=\"7\"\u003e        --- [ BeforeTest: TestCounterIncrementReset ] ---\u003c/span\u003e\n\u003cspan num=\"8\"\u003e        --- [ AfterTest: TestCounterIncrementReset ] ---\u003c/span\u003e\n\u003cspan num=\"9\"\u003e\u003c/span\u003e\n\u003cspan num=\"10\"\u003e    \u0026lt;\u0026lt;\u0026lt; [ RunAllTests -After- ] \u0026lt;\u0026lt;\u0026lt;\u003c/span\u003e\n\u003cspan num=\"11\"\u003e\u003c/span\u003e\n\u003cspan num=\"12\"\u003e    \u0026gt;\u0026gt;\u0026gt; [ RunAllTests -Before- ] \u0026gt;\u0026gt;\u0026gt;            // UnsafeCounter\u003c/span\u003e\n\u003cspan num=\"13\"\u003e\u003c/span\u003e\n\u003cspan num=\"14\"\u003e        --- [ BeforeTest: TestCounterIncrementIncreasesValue ] ---\u003c/span\u003e\n\u003cspan num=\"15\"\u003e        --- [ AfterTest: TestCounterIncrementIncreasesValue ] ---\u003c/span\u003e\n\u003cspan num=\"16\"\u003e        --- [ BeforeTest: TestCounterIncrementReset ] ---\u003c/span\u003e\n\u003cspan num=\"17\"\u003e        --- [ AfterTest: TestCounterIncrementReset ] ---\u003c/span\u003e\n\u003cspan num=\"18\"\u003e\u003c/span\u003e\n\u003cspan num=\"19\"\u003e    \u0026lt;\u0026lt;\u0026lt; [ RunAllTests -After- ] \u0026lt;\u0026lt;\u0026lt;\u003c/span\u003e\n\u003cspan num=\"20\"\u003e\u003c/span\u003e\n\u003cspan num=\"21\"\u003ePASS\u003c/span\u003e\n\u003cspan num=\"22\"\u003eok      gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite    0.007s\u003c/span\u003e\n\u003c/pre\u003e\n\n\n","Play":false,"Edit":false,"FileName":"suite_wrap","Ext":"","Raw":"c2FtcGxlcy9leDMvdGVzdF9zdWl0ZSAkPiBnbyB0ZXN0IC13CgogICAgPj4+IFsgUnVuQWxsVGVzdHMgLUJlZm9yZS0gXSA+Pj4gICAgICAgICAgICAvLyBTYWZlQ291bnRlcgoKICAgICAgICAtLS0gWyBCZWZvcmVUZXN0OiBUZXN0Q291bnRlckluY3JlbWVudEluY3JlYXNlc1ZhbHVlIF0gLS0tCiAgICAgICAgLS0tIFsgQWZ0ZXJUZXN0OiBUZXN0Q291bnRlckluY3JlbWVudEluY3JlYXNlc1ZhbHVlIF0gLS0tCiAgICAgICAgLS0tIFsgQmVmb3JlVGVzdDogVGVzdENvdW50ZXJJbmNyZW1lbnRSZXNldCBdIC0tLQogICAgICAgIC0tLSBbIEFmdGVyVGVzdDogVGVzdENvdW50ZXJJbmNyZW1lbnRSZXNldCBdIC0tLQoKICAgIDw8PCBbIFJ1bkFsbFRlc3RzIC1BZnRlci0gXSA8PDwKCiAgICA+Pj4gWyBSdW5BbGxUZXN0cyAtQmVmb3JlLSBdID4+PiAgICAgICAgICAgIC8vIFVuc2FmZUNvdW50ZXIKCiAgICAgICAgLS0tIFsgQmVmb3JlVGVzdDogVGVzdENvdW50ZXJJbmNyZW1lbnRJbmNyZWFzZXNWYWx1ZSBdIC0tLQogICAgICAgIC0tLSBbIEFmdGVyVGVzdDogVGVzdENvdW50ZXJJbmNyZW1lbnRJbmNyZWFzZXNWYWx1ZSBdIC0tLQogICAgICAgIC0tLSBbIEJlZm9yZVRlc3Q6IFRlc3RDb3VudGVySW5jcmVtZW50UmVzZXQgXSAtLS0KICAgICAgICAtLS0gWyBBZnRlclRlc3Q6IFRlc3RDb3VudGVySW5jcmVtZW50UmVzZXQgXSAtLS0KCiAgICA8PDwgWyBSdW5BbGxUZXN0cyAtQWZ0ZXItIF0gPDw8CgpQQVNTCm9rICAJZ2l0bGFiLmNvbS9wc2hpcmFsaS90ZXN0aW5nLWluLWdvL3NhbXBsZXMvZXgzL3Rlc3Rfc3VpdGUJMC4wMDdzCg=="}],"Notes":null,"Classes":null,"Styles":null},{"Number":[39],"Title":"Suite - Advantages","Elem":[{"Lines":["1. Ability to define Suite local helper methods"],"Pre":false},{"Lines":["func (s *suite) GenerateTestData()\nfunc (s *suite) DoSomethingAwesomeWith(c Counter)"],"Pre":true},{"Lines":["2. Can be designed to accept multi-dimension inputs"],"Pre":false},{"Lines":["Suite(c TestConfig, builder ()func Interface).RunAllTests\n- TestConfig := LocalFileSystem, InMemoryFileSystemAbstraction,\n                InMemoryDatabase, RealDatabase, etc.\n- builder    := Implementations under test"],"Pre":true},{"Lines":["3. Custom test runner"],"Pre":false},{"Lines":["Suite(..).RunAllTests\nSuite(..).RunSpecificTests\nSuite(..).RunPrivateTests\n          \\_ RunPrivateTests exposes the runner, but hides the 'testMethods'\n             1. The suite could be published in a package\n             2. Consumer cannot modify the tests"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[40],"Title":"Suite usage [1/3]","Elem":[{"Lines":["The 'Counter' example was contrived and overdone on purpose of this presentation"],"Pre":false},{"Lines":["INGREDIENTS:\n2 tests\n2 implementations\n1 fat 'Counter' interface (which happened to have all methods from the implementations)"],"Pre":true},{"Lines":["The 'Counter' type of suite can work well when:"],"Pre":false},{"Lines":["1. Large X -- Large number of tests to validate one input-set/implementation\n2. The tests effectively use all methods of the interface"],"Pre":true},{"Lines":["Interfaces must be small and lean"],"Pre":false},{"Lines":["1. If a Suite requires a fat interface, but clusters within the suite use a subset of interfaces.\n   \n   Problem  : THE SUITE IS TOO MIXED. It breaks single-responsibility-principle\n   Solution : Break the suite into smaller suites where:\n              - The interface footprint is smaller\n              - The cluser of tests now effectively use all methods"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[41],"Title":"Suite usage [2/3]","Elem":[{"Lines":["Reflection to iterate identify Test* methods and run them is not a necessity.","The runner could also invoke 't.Run' multiple times."],"Pre":false},{"Lines":["PROS of reflection vs a manual list of 't.Run'\n- Works great for large number of tests\n- Proof against misspelt test names (strings, not TestFunction names)\n- Proof against maintenance of the 'Run' list\n\nCONS\n- Overkill"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[42],"Title":"Suite usage [3/3] - With 'Counter' as an example:","Elem":[{"Lines":["Suites satisfy necessity:"],"Pre":false},{"Lines":["Example:\n1. TestCounterSuite tests basic counter functionality\n2. TestCounterSuite DID NOT test 'goroutine safety' in SafeCounter\n   Testing the goroutine safety of counters would be a different suite by itself"],"Pre":true},{"Lines":["Interface to Suite is not 1:1:"],"Pre":false},{"Lines":["Example:\nAn implementation which returns numbers from the fibonacci series\non 'Increment()' could still satisfy the 'Counter' interface, but\nfail TestCounterSuite"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[43],"Title":"Guidelines \u0026 best practices","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[44],"Title":"Avoid ...","Elem":[{"Lines":["1. MUST NOT:\nShare state between tests\n- Stateful Suite members with testdata\n- State dependent on order of test execution\n\n2. SHOULD NOT:\n- Perform excessive Setup or Teardown outside the test function\n- This should be invoked from within each test function per test.\n- Copy-paste is not considered (as) bad in testing (but don't overdo)\n\n3. SHOULD NOT:\nMake the Suite complex any more than it should be.\n- Core Suite responsiblity: (single responsibility principle)\n    a) Encapsulate a collection of tests\n    b) Provide runner(s) to execute those tests\n- Extend responsibly\n- \"Test\" is the king. \"Suite\" is the helper."],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[45],"Title":"Application code vs Test code [1/2]","Elem":[{"Lines":["Handler {                   |  Runner {\n    Middleware1 {           |      TestFunction {\n        Middleware2 {       |          Env Setup+ defer Teardown\n            BusinessCode {} |          Test Setup+ defer Teardown\n        }                   |          Test Logic\n    }                       |      }\n}                           |  }\n----------------------------+-------------------------------------\n This is a common pattern   |  Everything that happens in a test,\n    in application code     |       remains within the test!\n----------------------------+-------------------------------------"],"Pre":true},{"Lines":["+"],"Pre":false},{"Lines":["- Setup and Teardown should be invoked from within the test.\n- If a test fails, you should only have to look into the code\n  within the failing test"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[46],"Title":"Application code vs Test code [1/2]","Elem":[{"Lines":["Good"],"Pre":false},{"Lines":["\u003c--------- code under test ----------\u003e    \\\n                  ^                        \\\n                  |                         | Keep this distance minimum. Ideally next hop.\n                  |                        /\n\u003c------------ test code -------------\u003e    /"],"Pre":true},{"Lines":["Try to avoid"],"Pre":false},{"Lines":["\u003c--------- code under test ----------\u003e    \\\n                  ^                        \\\n         calls something else               | Affects readability. Increases test code footprint\n            calls something                /\n\u003c------------ test code -------------\u003e    /\n\n1. Test code nested through many calls can affect readability\n2. Larger test code footprint -\u003e More chances of bugs in test code\n3. If distributed across multiple files, then fragmented test code\n   affects readability further.\n\n\u003e\u003e Simple vs Easy \u003c\u003c"],"Pre":true}],"Notes":["While it is recommended that all test-code must reside within the test function","ideally in a flat way, there comes a point when the function becomes too long.","A test with simplicity, yet adverse readability would be one with hundred+","lines of code. When there are multiple tests of similar nature where 80%+ of","content between these tests is copy-paste and looks very similar, it can become","hard to distinguish between tests. The actual test logic, which forms a small","portion of the quantity of code doesn't stand out."],"Classes":null,"Styles":null},{"Number":[47],"Title":"Examples from go and stdlib","Elem":[{"Lines":["Some examples which I found interesting (related to subtests \u0026 test data)"],"Pre":false},{"Lines":["Ref: [[https://golang.org/src/cmd/go/go_test.go]]"],"Pre":false},{"Lines":["testgoData\n\\__ Use of helper functions and their usage in tests"],"Pre":true},{"Lines":["Ref: [[https://golang.org/src/net/http/response_test.go]]"],"Pre":false},{"Lines":["Data driven"],"Pre":true},{"Lines":["Ref: [[https://golang.org/src/cmd/gofmt/gofmt_test.go]]"],"Pre":false},{"Lines":["Use of golden files"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[48],"Title":"PART II - Test Fixtures \u0026 Helpers","Elem":null,"Notes":null,"Classes":null,"Styles":null},{"Number":[49],"Title":"Test Fixtures and Helpers","Elem":[{"Lines":["Help you prepare the environment and test data to run your test."],"Pre":false},{"Lines":["Setup     - Stuff you do before the test logic begins\nTeardown  - Stuff you do after a test has PASSED or FAILED.\n            The teardown will 'undo' what Setup did."],"Pre":true},{"Lines":["When to use it?"],"Pre":false},{"Lines":["1. If you need to read/write to temp files on the filesystem\n2. Talk to a database\n3. Talk to a server over the network\n4. Assemble a complex piece of testdata to test with\n5. Test resilience or error handling in failure scenarios\netc."],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[50],"Title":"[F1] Setup-Only","Elem":[{"Lines":["Example: The Builders from the 'Counter' Suite"],"Pre":false},{"Lines":["Everything happens in-memory. No persistent state changes anywhere.","Use-and-throw. Nothing to teardown."],"Pre":false},{"Lines":["Generalized example:"],"Pre":false},{"Lines":["func BuildSomethingComplex(\u003cargs\u003e) \u003csomeType\u003e {\n    //\n    //  Assemble dependencies,\n    //  Generate randomized data, templates, etc\n    //  specifically tuned as an input for testing\n    //\n    return \u003csomeType\u003e\n}"],"Pre":true},{"Lines":["A good practice is to assemble a new instance of every ingredient.","Each test gets a fresh copy of incredients.","Lowers the risk of errors due to ingredients having some past state."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[51],"Title":"[F2] Idempotent Teardowns","Elem":[{"Lines":["1. Teardown (cleanup) functions which can be run anywhere.","2. Can be run both before and after tests.","3. If state is clean, Teardown does nothing.","4. If not, Teardown will clean it up.","5. If an error occurs with Teardown, its a catastrophic failure. Future tests may be invalid.","   (if the setup/teardown involves global-scope environment changes)"],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[52],"Title":"Fixture example and its usage","Elem":[{"Lines":["Ref: [[https://golang.org/src/syscall/syscall_linux_test.go]]"],"Pre":false},{"Lines":["[1] chtmpdir\n[2] Usage of chtmpdir in: TestFaccessat"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[53],"Title":"[F3] Setup; return Teardown func() on success","Elem":[{"Lines":["func fixture(t *testing.T) func() {\n    // setup\n    if err != nil {\n        t.Fatal(..errorMsg..)\n    }\n    return func() {\n        // teardown\n    }\n}"],"Pre":true},{"Lines":["Usage:"],"Pre":false},{"Lines":["func TestFunction(t *testing.T) {\n    defer fixture(t)()\n      ^      ^      ^\n      |      |      +____ This () is for the returned teardown func()\n      |      |\n      |      +___________ Fixture does setup and returns a teardown func()\n      |\n      +__________________ Deferred: Hence, guaranteed execution after the\n    ...                   TestFunction completes execution\n}"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[54],"Title":"[F4, F5] Some other variants","Elem":[{"Lines":["[F4] Return data, resources for the test along with teardown func"],"Pre":false},{"Lines":["func TestFunction(t *testing.T) {\n    resource, teardown := fixture(t)\n    defer teardown()\n    //\n    //  test code uses resource\n    //\n    ...\n}"],"Pre":true},{"Lines":["[F5] Return a struct on which teardown is a method (amongst other fields \u0026 methods)"],"Pre":false},{"Lines":["func TestFunction(t *testing.T) {\n    strukt := fixture(t)        // returns a struct with extended functionality\n    defer strukt.teardown()     // cleanup\n    //\n    //  strukt.\u003cfields\u003e and struct.\u003cmethods\u003e get used in the test\n    //\n    ...\n}"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[55],"Title":"[G1] Gotcha: Teardown func() is returned only on successful setup","Elem":[{"Lines":["func LeakingFixture(t *testing.T) func() {\n    var err error\n    err = Step1()\n    if err != nil { t.Fatalf(\"Failed Step 1\") }\n    err = Step2()\n    if err != nil { t.Fatalf(\"Failed Step 2\") }\n\n    return func() { ..teardown.. }\n}"],"Pre":true},{"Lines":["If Step2 fails fatally, and Step1 has made a system-scope","state change, that change leaks. Test and teardown are skipped."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[56],"Title":"[G1] Solution","Elem":[{"Lines":["Fixture functions which setup first and return a teardown func() must:"],"Pre":false},{"Lines":["1. Raise t.Fatal against the first state change causing code.\n2. No more state change causing code must be part of that fixture.\n3. A teardown func() would thus not have to run on t.Fatal as:\n    - The error was caused while making the first state change\n4. When the setup does succeed, the teardown concerns itself with\n   reverting the one state change that succeeded."],"Pre":true},{"Lines":["Tests can stack multiple individual fixtures of this nature:"],"Pre":false},{"Lines":["func TestSomethingInIsolation(t *testing.T) func {\n    defer requireContainer(t)()             // idempotent setup \u0026 teardown\n    defer requireSystemTestConfig(t)()      // idempotent setup \u0026 teardown\n    defer requireSwitchToContainer(t)()     // idempotent setup \u0026 teardown\n    //\n    //  subprocess go test cmd to re-run this test inside\n    //  a container\n    //\n}"],"Pre":true}],"Notes":null,"Classes":null,"Styles":null},{"Number":[57],"Title":"[G2] Gotcha: Forget parantheses on deferred call","Elem":[{"Lines":["If you skip the () in defer, then Setup runs after the test!","The code is still valid if you miss the parantheses. So, be vigilant."],"Pre":false},{"Lines":["defer AyyoFixture(t)()\n                     \\__ Don't miss this"],"Pre":true},{"Lines":["Alternatives -\u003e Fixture formats [F4] and [F5]"],"Pre":false},{"Lines":["They return values, which ask for an explicit defer call of the teardown func","on the subsequent line. This makes it readable."],"Pre":false}],"Notes":null,"Classes":null,"Styles":null},{"Number":[58],"Title":"Q\u0026A","Elem":null,"Notes":null,"Classes":null,"Styles":null}];
+      var titleNotes =  null 
+    </script>
+    <script src="Testing_In_Go_files/notes.js"></script>
+    
+
+    <script>
+      
+      if (window["location"] && window["location"]["hostname"] == "talks.golang.org") {
+        var _gaq = _gaq || [];
+        _gaq.push(["_setAccount", "UA-11222381-6"]);
+        _gaq.push(["b._setAccount", "UA-49880327-6"]);
+        window.trackPageview = function() {
+          _gaq.push(["_trackPageview", location.pathname+location.hash]);
+          _gaq.push(["b._trackPageview", location.pathname+location.hash]);
+        };
+        window.trackPageview();
+        window.trackEvent = function(category, action, opt_label, opt_value, opt_noninteraction) {
+          _gaq.push(["_trackEvent", category, action, opt_label, opt_value, opt_noninteraction]);
+          _gaq.push(["b._trackEvent", category, action, opt_label, opt_value, opt_noninteraction]);
+        };
+      }
+    </script>
+  <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1"><meta name="apple-mobile-web-app-capable" content="yes"></head>
+
+  <body style="display: none" class="loaded">
+
+    <section class="slides layout-widescreen">
+
+      <article class="current">
+        <h1>Testing in Go</h1>
+        <h3>Test Composition Patterns, Fixtures &amp; Helpers</h3>
+        
+        
+          <div class="presenter">
+            
+  
+  <p>
+    Golang Bangalore - Meetup 36
+  </p>
+  
+
+  
+  <p>
+    8th Sept 2018
+  </p>
+  
+
+          </div>
+        
+          <div class="presenter">
+            
+          </div>
+        
+          <div class="presenter">
+            
+  
+  <p>
+    Praveen G Shirali
+  </p>
+  
+
+          </div>
+        
+          <div class="presenter">
+            
+          </div>
+        
+          <div class="presenter">
+            
+  
+  <p>
+    
+  </p>
+  
+
+          </div>
+        
+      </article>
+
+  
+  
+      <article class="next">
+      
+        <h3>This talk covers ...</h3>
+        
+  
+  <p>
+    1. Unittests, and other forms of automated tests
+<br>
+
+    2. Testing with Go: Tools, packages, other tools etc
+<br>
+
+    3. Test code organization patterns, with examples
+<br>
+
+    4. Guidelines &amp; Best practices
+<br>
+
+    5. Test fixtures &amp; Helpers
+<br>
+
+    6. Common fixture patterns
+  </p>
+  
+
+      
+      <span class="pagenumber">2</span>
+      </article>
+  
+  
+  
+      <article class="far-next">
+      
+        <h2>PART 1 - Unittests, and other forms of automated tests</h2>
+      
+      <span class="pagenumber">3</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Unittests</h3>
+        
+  
+  <p>
+    1. Pieces of code meant to test other code.
+<br>
+
+    2. Unittests should follow these principles:
+  </p>
+  
+
+  
+  <div class="code"><pre>Fast            --- Milliseconds per test. Second(s) (or less) for all tests
+Isolated        --- Order agnostic. No dependency on state, system, test environments etc
+Repeatable      --- Same results anywhere, anytime, any number of times
+Self-Validating --- A Test can determine by itself whether it failed or passed.
+Timely          --- Tests are written just before the the code they test</pre></div>
+  
+
+      
+      <span class="pagenumber">4</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Other automated tests</h3>
+        
+  
+  <p>
+    1. Integration, acceptance tests, etc.
+<br>
+
+    2. They have dependencies. The dependencies are real.
+<br>
+
+    3. Tests may involve managing a system state or isolated environments
+  </p>
+  
+
+  
+  <div class="code"><pre>Setup    - Automatically setup the environment and dependencies
+Teardown - Clean up everything. Restore initial test state</pre></div>
+  
+
+  
+  <p>
+    4. Reminder: Its 2018.
+  </p>
+  
+
+      
+      <span class="pagenumber">5</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>PART 2 - Testing with Go</h2>
+      
+      <span class="pagenumber">6</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>The Go Test Runner &amp; Tests in Go</h3>
+        
+  
+  <p>
+    Or simply 'go test' is the tool used to discover and execute tests in Go.
+  </p>
+  
+
+  
+  <div class="code"><pre>&gt; go help test      // description of of what 'go test' does
+&gt; go help tesfunc   // description of the function spec
+&gt; go test -h        // CLI flags and their description
+&gt; go test           // discovers and executes tests in your current package</pre></div>
+  
+
+  
+  <p>
+    A function having the following signature:
+  </p>
+  
+
+  
+  <div class="code"><pre>func TestXxx(*testing.T)</pre></div>
+  
+
+  
+  <p>
+    <code>Xxx</code> - Must begin with a capital letter
+  </p>
+  
+
+  
+  <div class="code"><pre>TestInvalidLoginReturnsError     // valid test name
+TestarossaFerrari                // invalid test name</pre></div>
+  
+
+  
+  <p>
+    Test function are discovered from filenames ending with <b>`_test.go`</b>
+  </p>
+  
+
+      
+      <span class="pagenumber">7</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Test APIs, Bench Implementation</h3>
+        
+  
+  <p>
+    1. Go supports <code>exported</code> and <code>private</code> variable identifiers.
+<br>
+
+    2. Test files which belong to a package have access to both <code>exported</code> and <code>private</code> code
+<br>
+
+    3. Test files can also exist in a special package with the name <code>&lt;package&gt;_test</code>.
+<br>
+
+    4. Files from <code>&lt;package&gt;</code> and <code>&lt;package&gt;_test</code> can co-exist in the same directory.
+<br>
+
+    5. Code in <code>&lt;package&gt;_test</code> has access only to <code>exported</code> code from <code>&lt;package&gt;</code>.
+  </p>
+  
+
+  
+  <p>
+    -- WHY ??
+  </p>
+  
+
+  
+  <p>
+    1. Packages should be tested by invoking their exported API.
+<br>
+
+    2. This is what an external package would use to <code>call-in</code> to the package under test.
+<br>
+
+    3. Tests residing in the internal <code>&lt;package&gt;</code> can be used to test finer details of the implementation.
+<br>
+
+    4. Benchmarks are suited for use in internal packages as they are aimed at quantifying implementation performance.
+  </p>
+  
+
+      
+      <span class="pagenumber">8</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Not covered in this talk</h3>
+        
+  
+  <p>
+    Go provides comprehensive set of tools to track code-coverage, benchmark, analyze,
+<br>
+
+    and profile go code. These are not covered in this talk.
+  </p>
+  
+
+      
+      <span class="pagenumber">9</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>PART 3 - Test code organization patterns &amp; examples</h2>
+      
+      <span class="pagenumber">10</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>[EX1] A 'hello world' through tests</h2>
+      
+      <span class="pagenumber">11</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX1] Code and results</h3>
+        
+  
+  <p>
+    Contents of 'samples/ex1/sample_test.go'
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="18">import "testing"</span>
+<span num="19"></span>
+<span num="20">func TestExample(t *testing.T) {</span>
+<span num="21">    t.Log("Hello World!")</span>
+<span num="22">}</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Running 'go test' results in:
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="1">PASS</span>
+<span num="2">ok      gitlab.com/pshirali/testing-in-go/samples/ex1    0.006s</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Running 'go test -v' results in verbose output:
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="1">=== RUN   TestExample</span>
+<span num="2">--- PASS: TestExample (0.00s)</span>
+<span num="3">    sample_test.go:6: Hello World!</span>
+<span num="4">PASS</span>
+<span num="5">ok      gitlab.com/pshirali/testing-in-go/samples/ex1    0.006s</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">12</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>The TB interface</h3>
+        
+  
+  <p>
+    Shared by both T and B test types: <a href="https://golang.org/pkg/testing/#TB" target="_blank">golang.org/pkg/testing/#TB</a>
+  </p>
+  
+
+  
+  <p>
+    Skip
+  </p>
+  
+
+  
+  <div class="code"><pre>Skip the test from the point where it's called</pre></div>
+  
+
+  
+  <p>
+    Log
+  </p>
+  
+
+  
+  <div class="code"><pre>Log a message. (go test '-v')</pre></div>
+  
+
+  
+  <p>
+    Error
+  </p>
+  
+
+  
+  <div class="code"><pre>Log an error. Marks the test FAIL, but continues execution.</pre></div>
+  
+
+  
+  <p>
+    Fatal
+  </p>
+  
+
+  
+  <div class="code"><pre>- Log a fatal error.
+- Mark the test FAIL, and stop execution of the current test.
+- Execute any deferred functions.
+- Proceed to the next test.</pre></div>
+  
+
+      
+      <span class="pagenumber">13</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>[EX2] Table Driven Tests &amp; Subtests</h2>
+      
+      <span class="pagenumber">14</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX2] Table Driven Tests - Code under test</h3>
+        
+  
+  <div class="code"><pre>Can be used when a test logic needs to be executed
+with multiple sets of inputs and corresponding results.</pre></div>
+  
+
+  
+  <p>
+    Example: The 'hello world' of table driven tests!
+<br>
+
+    Add an arbitrary number of integers and return their sum.
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="16">package adder</span>
+<span num="17"></span>
+<span num="18">func AddInt(integers ...int) int {</span>
+<span num="19">    sum := 0</span>
+<span num="20">    for _, i := range integers {</span>
+<span num="21">        sum += i</span>
+<span num="22">    }</span>
+<span num="23">    return sum</span>
+<span num="24">}</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">15</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX2] Table Driven Tests - Test code</h3>
+        
+  
+  <p>
+    Iterate over test parameters and feed them into the test logic.
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="22">func TestAdderUsingTable(t *testing.T) {</span>
+<span num="23">    cases := []struct {</span>
+<span num="24">        integers []int</span>
+<span num="25">        expected int</span>
+<span num="26">    }{</span>
+<span num="27">        {[]int{}, 0},        // -------------------------------------------</span>
+<span num="28">        {[]int{0, 0, 0}, 0}, //  TABLE: { Input, Expected }</span>
+<span num="29">        {[]int{-1, -2}, -3}, //  One set of test params per test iteration</span>
+<span num="30">        {[]int{1, 2, 3}, 6}, // -------------------------------------------</span>
+<span num="31">    }</span>
+<span num="32"></span>
+<span num="33">    for _, c := range cases {</span>
+<span num="34">        t.Logf("-------------------- Adding: %v", c.integers)</span>
+<span num="35">        actual := adder.AddInt(c.integers...)</span>
+<span num="37">        if actual != c.expected {</span>
+<span num="38">            t.Errorf("Sum of %v = %v (Actual). Expected: %v",</span>
+<span num="39">                c.integers, actual, c.expected)</span>
+<span num="40">        }</span>
+<span num="42">    }</span>
+<span num="43">}</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">16</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX2] But, it's still a single test!</h3>
+        
+  
+  <p>
+    Output of 'go test -v'
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="1">=== RUN   TestAdderUsingTable</span>
+<span num="2">--- PASS: TestAdderUsingTable (0.00s)</span>
+<span num="3">    adder_test.go:20: -------------------- Adding: []</span>
+<span num="4">    adder_test.go:20: -------------------- Adding: [0 0 0]</span>
+<span num="5">    adder_test.go:20: -------------------- Adding: [-1 -2]</span>
+<span num="6">    adder_test.go:20: -------------------- Adding: [1 2 3]</span>
+<span num="7">PASS</span>
+<span num="8">ok      gitlab.com/pshirali/testing-in-go/samples/ex2    0.007s</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Notice the use of t.Errorf, not t.Fatalf
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="37">        if actual != c.expected {</span>
+<span num="38">            t.Errorf("Sum of %v = %v (Actual). Expected: %v",</span>
+<span num="39">                c.integers, actual, c.expected)</span>
+<span num="40">        }</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    In order to ensure that we continue to test other paramters, should one of them fail,
+<br>
+
+    't.Errorf' has been used.
+  </p>
+  
+
+      
+      <span class="pagenumber">17</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Is there a better way? -- Yes ---&gt; Subtests</h3>
+        
+  
+  <p>
+    Subtests are tests within a test.
+  </p>
+  
+
+  
+  <p>
+    Test are named <code>&lt;ParentTest&gt;/&lt;SubTest&gt;</code>, with slash (/) separating parents from children
+  </p>
+  
+
+  
+  <p>
+    Ref: <a href="https://golang.org/pkg/testing/#hdr-Subtests_and_Sub_benchmarks" target="_blank">golang.org/pkg/testing/#hdr-Subtests_and_Sub_benchmarks</a>
+  </p>
+  
+
+      
+      <span class="pagenumber">18</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX2] Table Driven Tests - Using subtests</h3>
+        
+  <div class="code">
+
+
+<pre><span num="45">func TestAdderUsingSubtests(t *testing.T) {</span>
+<span num="46">    cases := []struct {</span>
+<span num="47">        name     string</span>
+<span num="48">        integers []int</span>
+<span num="49">        expected int</span>
+<span num="50">    }{</span>
+<span num="51">        {"Empty", []int{}, 0},</span>
+<span num="52">        {"Zero", []int{0, 0, 0}, 0},</span>
+<span num="53">        {"Negative", []int{-1, -2}, -3},</span>
+<span num="54">        {"Positive", []int{1, 2, 3}, 6},</span>
+<span num="55">    }</span>
+<span num="56"></span>
+<span num="57">    for _, c := range cases {</span>
+<span num="58">        t.Run(c.name, func(t *testing.T) {</span>
+<span num="59">            t.Logf("-------------------- Adding: %v", c.integers)</span>
+<span num="60">            actual := adder.AddInt(c.integers...)</span>
+<span num="61">            if actual != c.expected {</span>
+<span num="62">                t.Fatalf("Sum of %v = %v (Actual). Expected: %v",</span>
+<span num="63">                    c.integers, actual, c.expected)</span>
+<span num="64">            }</span>
+<span num="65">        })</span>
+<span num="66">    }</span>
+<span num="67">}</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">19</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX2] Table Driven Tests - Using subtests - Output</h3>
+        
+  <div class="code">
+
+
+<pre><span num="1">=== RUN   TestAdderUsingSubtests</span>
+<span num="2">=== RUN   TestAdderUsingSubtests/Empty</span>
+<span num="3">=== RUN   TestAdderUsingSubtests/Zero</span>
+<span num="4">=== RUN   TestAdderUsingSubtests/Negative</span>
+<span num="5">=== RUN   TestAdderUsingSubtests/Positive</span>
+<span num="6">--- PASS: TestAdderUsingSubtests (0.00s)</span>
+<span num="7">    --- PASS: TestAdderUsingSubtests/Empty (0.00s)</span>
+<span num="8">        adder_test.go:45: -------------------- Adding: []</span>
+<span num="9">    --- PASS: TestAdderUsingSubtests/Zero (0.00s)</span>
+<span num="10">        adder_test.go:45: -------------------- Adding: [0 0 0]</span>
+<span num="11">    --- PASS: TestAdderUsingSubtests/Negative (0.00s)</span>
+<span num="12">        adder_test.go:45: -------------------- Adding: [-1 -2]</span>
+<span num="13">    --- PASS: TestAdderUsingSubtests/Positive (0.00s)</span>
+<span num="14">        adder_test.go:45: -------------------- Adding: [1 2 3]</span>
+<span num="15">PASS</span>
+<span num="16">ok      gitlab.com/pshirali/testing-in-go/samples/ex2    0.007s</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">20</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Try your own helper functions ...</h3>
+        
+  
+  <p>
+    Do experiment with simple helper functions before settling on a 3rd-party lib.
+<br>
+
+    The ones below are not perfect, they are minimal (on purpose)
+  </p>
+  
+
+  
+  <div class="code"><pre>// SkipIf skips the test if the condition is true
+func SkipIf(t *testing.T, condition bool, args ...interface{}) {
+    if condition { t.Skip(args...) }
+}
+
+// Assert fatally fails the test if a condition is false
+func Assert(t *testing.T, condition bool, args ...interface{}) {
+    if !condition { t.Fatal(args...) }
+}
+
+// Equal deeply compares two types and fatally fails if they are unequal
+import "reflect"
+func Equal(t *testing.T, lhs, rhs interface{}, args ...interface{}) {
+    if !reflect.DeepEqual(lhs, rhs) { t.Fatal(args...) }
+}</pre></div>
+  
+
+  
+  <p>
+    The implementation above is used in code samples in rest of the slides.
+  </p>
+  
+
+      
+      <span class="pagenumber">21</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Some more test features ...</h3>
+        
+  
+  <p>
+    t.Helper() -- Ref: <a href="https://golang.org/src/testing/testing.go?s=24302:24327#L669" target="_blank">golang.org/src/testing/testing.go?s=24302:24327#L669</a>
+  </p>
+  
+
+  
+  <p>
+    t.Parallel() -- Ref: <a href="https://golang.org/src/testing/testing.go?s=25187:25209#L696" target="_blank">golang.org/src/testing/testing.go?s=25187:25209#L696</a>
+  </p>
+  
+
+  
+  <p>
+    t.Parallel() in subtests -- Ref: <a href="https://blog.golang.org/subtests" target="_blank">blog.golang.org/subtests</a>
+  </p>
+  
+
+  
+  <p>
+    testdata -- Ref: <a href="https://golang.org/cmd/go/#hdr-Description_of_package_lists" target="_blank">golang.org/cmd/go/#hdr-Description_of_package_lists</a>
+  </p>
+  
+
+  
+  <div class="code"><pre>Dirs and files that begin with "." or "_" are ignored by go tool
+Dirs named "testdata" are ignored</pre></div>
+  
+
+      
+      <span class="pagenumber">22</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>[EX3] Test Suites</h2>
+      
+      <span class="pagenumber">23</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Example: An Integer counter</h3>
+        
+  
+  <div class="code"><pre>1. A counter has an initial value of 0.
+2. Exposes method to increment value. Implicit increment by 1.
+3. Exposes method to retrieve current value.
+4. Exposes method to reset value to 0.</pre></div>
+  
+
+  
+  <p>
+    Interface (for reference)
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="16">package counter</span>
+<span num="17"></span>
+<span num="18">type Resetter interface{ Reset() }</span>
+<span num="19">type Incrementer interface{ Increment() }</span>
+<span num="20">type IntValuer interface{ Value() int }</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">24</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] An 'unsafe' Counter implementation</h3>
+        
+  
+  <p>
+    Goroutine safety not guaranteed
+  </p>
+  
+
+  <div class="code">
+
+
+<pre><span num="16">package unsafe_counter</span>
+<span num="17"></span>
+<span num="18">type unsafeCounter struct {</span>
+<span num="19">    value int</span>
+<span num="20">}</span>
+<span num="21"></span>
+<span num="22">func (c *unsafeCounter) Reset()     { c.value = 0 }</span>
+<span num="23">func (c *unsafeCounter) Increment() { c.value += 1 }</span>
+<span num="24">func (c *unsafeCounter) Value() int { return c.value }</span>
+<span num="25"></span>
+<span num="26">func NewUnsafeCounter() *unsafeCounter {</span>
+<span num="27">    return &amp;unsafeCounter{}</span>
+<span num="28">}</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">25</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Some (non-comprehensive) test code ...</h3>
+        
+  <div class="code">
+
+
+<pre><span num="31">func TestCounterIncrementIncreasesValue(t *testing.T) {</span>
+<span num="32">    c := NewUnsafeCounter()</span>
+<span num="33">    for i := 1; i &lt; 3; i++ {</span>
+<span num="34">        c.Increment()</span>
+<span num="35">        Assert(t, c.Value() == i, "At Step:", i, "!=", c.Value())</span>
+<span num="36">    }</span>
+<span num="37">}</span>
+<span num="38"></span>
+<span num="39">func TestCounterIncrementReset(t *testing.T) {</span>
+<span num="40">    c := NewUnsafeCounter()</span>
+<span num="41">    for i := 0; i &lt; 2; i++ {</span>
+<span num="42">        c.Increment()</span>
+<span num="43">    }</span>
+<span num="44">    c.Reset()</span>
+<span num="45">    Assert(t, c.Value() == 0, "Expected 0 after Reset. Got:", c.Value())</span>
+<span num="46">}</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Counters are stateful. We need a fresh instance in each test.
+  </p>
+  
+
+  
+  <div class="code"><pre>c := NewUnsafeCounter()</pre></div>
+  
+
+      
+      <span class="pagenumber">26</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] A 'safe' Counter implementation</h3>
+        
+  <div class="code">
+
+
+<pre><span num="30">type safeCounter struct {</span>
+<span num="31">    mu sync.RWMutex</span>
+<span num="32">    uc UnsafeCounter</span>
+<span num="33">}</span>
+<span num="34"></span>
+<span num="35">func (c *safeCounter) Reset() {</span>
+<span num="36">    c.mu.Lock()</span>
+<span num="37">    defer c.mu.Unlock()</span>
+<span num="38">    c.uc.Reset()</span>
+<span num="39">}</span>
+<span num="40">func (c *safeCounter) Increment() {</span>
+<span num="41">    c.mu.Lock()</span>
+<span num="42">    defer c.mu.Unlock()</span>
+<span num="43">    c.uc.Increment()</span>
+<span num="44">}</span>
+<span num="45">func (c *safeCounter) Value() int {</span>
+<span num="46">    c.mu.RLock()</span>
+<span num="47">    defer c.mu.RUnlock()</span>
+<span num="48">    return c.uc.Value()</span>
+<span num="49">}</span>
+<span num="50">func NewSafeCounter() *safeCounter {</span>
+<span num="51">    return &amp;safeCounter{uc: NewUnsafeCounter()}</span>
+<span num="52">}</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">27</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Desired solution</h3>
+        
+  
+  <p>
+    (X set of tests) * (Y set of inputs)
+  </p>
+  
+
+  
+  <p>
+    In our example:
+  </p>
+  
+
+  
+  <div class="code"><pre>X = All tests which test the behavior of 'Counter' interface
+Y = Multiple implementations which satisfy 'Counter'
+    Thus, each implementation must satisfy all tests in X</pre></div>
+  
+
+      
+      <span class="pagenumber">28</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Problem: Constructors with varying signatures</h3>
+        
+  
+  <div class="code"><pre>NewUnsafeCounter() *unsafeCounter
+NewSafeCounter() *safeCounter</pre></div>
+  
+
+  
+  <p>
+    Lets assume:
+  </p>
+  
+
+  
+  <div class="code"><pre>- We only have access to the constructor function, not the structs
+- We only get pointers to respective structs
+- Constructor signatures are (and also assumed to be) different for
+  each implementation
+- The only 'commonality' is that the respective structs satisfy 
+  a common (in this case 'Counter') interface</pre></div>
+  
+
+  
+  <p>
+    We can't natively pass the constructor of each implementation to
+<br>
+
+    any common test executor function.
+  </p>
+  
+
+      
+      <span class="pagenumber">29</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Create a 'Builder' for each implementation</h3>
+        
+  
+  <p>
+    The builder encapsulates the construction of each implementation, and
+<br>
+
+    its dependencies.
+  </p>
+  
+
+  
+  <p>
+    It exposes a uniform interface through which new
+<br>
+
+    instances of each implementation can be generated.
+  </p>
+  
+
+  
+  <div class="code"><pre>type CounterBuilder func() Counter</pre></div>
+  
+
+  
+  <p>
+    This could be achieved by a function.
+  </p>
+  
+
+  
+  <div class="code"><pre>func &lt;Interface&gt;Builder() &lt;Interface&gt; {
+    // instantiate dependencies here
+    // return a new instance here
+    return &lt;Constructor&gt;() // returns a pointer
+}</pre></div>
+  
+
+      
+      <span class="pagenumber">30</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Applying this to our counters</h3>
+        
+  <div class="code">
+
+
+<pre><span num="57">func UnsafeCounterBuilder() Counter {</span>
+<span num="58">    return NewUnsafeCounter() // returns *unsafeCounter</span>
+<span num="59">}</span>
+<span num="60"></span>
+<span num="61">func SafeCounterBuilder() Counter {</span>
+<span num="62">    return NewSafeCounter() // returns *safeCounter</span>
+<span num="63">}</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Now both Builders satisfy the signature
+  </p>
+  
+
+  
+  <div class="code"><pre>func() Counter</pre></div>
+  
+
+      
+      <span class="pagenumber">31</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Lets create a Suite</h3>
+        
+  <div class="code">
+
+
+<pre><span num="68">type suite struct {</span>
+<span num="69">    builder func() Counter</span>
+<span num="70">}</span>
+<span num="71"></span>
+<span num="72">func Suite(builder func() Counter) *suite {</span>
+<span num="73">    return &amp;suite{builder: builder}</span>
+<span num="74">}</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">32</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Add tests ...</h3>
+        
+  <div class="code">
+
+
+<pre><span num="83">func (s *suite) TestCounterIncrementIncreasesValue(t *testing.T) {     // Added (s *suite)</span>
+<span num="84">    c := s.builder()              // &lt;---------------------- new instance built by builder</span>
+<span num="85">    for i := 1; i &lt; 3; i++ {</span>
+<span num="86">        c.Increment()</span>
+<span num="87">        Assert(t, c.Value() == i, "At Step:", i, "!=", c.Value())</span>
+<span num="88">    }</span>
+<span num="89">}</span>
+<span num="90"></span>
+<span num="91">func (s *suite) TestCounterIncrementReset(t *testing.T) {              // Added (s *suite)</span>
+<span num="92">    c := s.builder()              // &lt;---------------------- new instance built by builder</span>
+<span num="93">    for i := 0; i &lt; 2; i++ {</span>
+<span num="94">        c.Increment()</span>
+<span num="95">    }</span>
+<span num="96">    c.Reset()</span>
+<span num="97">    Assert(t, c.Value() == 0, "Expected 0 after Reset. Got:", c.Value())</span>
+<span num="98">}</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Changes to the first two lines
+  </p>
+  
+
+  
+  <div class="code"><pre>1. Tests are now methods implemented on Suite struct
+2. Each test gets a fresh instance of Counter supplied by `s.builder()`</pre></div>
+  
+
+      
+      <span class="pagenumber">33</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Add the runner ...</h3>
+        
+  <div class="code">
+
+
+<pre><span num="102">func (s *suite) RunAllTests(t *testing.T) {</span>
+<span num="103">    v := reflect.ValueOf(s)                                 //  1. Reflect on the suite</span>
+<span num="104">    for n := 0; n &lt; v.NumMethod(); n++ {                    //  2. Iterate through method numbers</span>
+<span num="105">        i := v.Method(n).Interface()                        //  3. Get the method as interface{}</span>
+<span num="106">        if method, ok := i.(func(*testing.T)); ok {         //  4. If it matches test signature</span>
+<span num="107">            methodName := reflect.TypeOf(s).Method(n).Name  //  5. Get the method's name</span>
+<span num="108">            if strings.HasPrefix(methodName, "Test") {      //  6. If it begins with 'Test'</span>
+<span num="109">                t.Run(methodName, method)                   //  7. Run that method as a test</span>
+<span num="110">            }</span>
+<span num="111">        }</span>
+<span num="112">    }</span>
+<span num="113">}</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Note:
+  </p>
+  
+
+  
+  <div class="code"><pre>The method 'RunAllTests' also matches the test signature 'func(*testing.T)'
+Step 6 exists to exclude 'RunAllTests' and avoid a recursive loop</pre></div>
+  
+
+      
+      <span class="pagenumber">34</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Finally, the TestCounterSuite</h3>
+        
+  <div class="code">
+
+
+<pre><span num="138">func TestCounterSuite(t *testing.T) {    // Table + Subtest driven tests against the Suite</span>
+<span num="139">    cases := []struct {</span>
+<span num="140">        name    string</span>
+<span num="141">        builder func() Counter</span>
+<span num="142">    }{</span>
+<span num="143">        {"SafeCounter", SafeCounterBuilder},</span>
+<span num="144">        {"UnsafeCounter", UnsafeCounterBuilder},</span>
+<span num="145">    }</span>
+<span num="146"></span>
+<span num="147">    for _, c := range cases {</span>
+<span num="148">        t.Run(c.name, Suite(c.builder).RunAllTests)</span>
+<span num="149">    }</span>
+<span num="150">}</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">35</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Suite - Output</h3>
+        
+  <div class="code">
+
+
+<pre><span num="1">samples/ex3/test_suite $&gt; go test -v</span>
+<span num="2"></span>
+<span num="3">=== RUN   TestCounterSuite</span>
+<span num="4">=== RUN   TestCounterSuite/SafeCounter</span>
+<span num="5">=== RUN   TestCounterSuite/SafeCounter/TestCounterIncrementIncreasesValue</span>
+<span num="6">=== RUN   TestCounterSuite/SafeCounter/TestCounterIncrementReset</span>
+<span num="7">=== RUN   TestCounterSuite/UnsafeCounter</span>
+<span num="8">=== RUN   TestCounterSuite/UnsafeCounter/TestCounterIncrementIncreasesValue</span>
+<span num="9">=== RUN   TestCounterSuite/UnsafeCounter/TestCounterIncrementReset</span>
+<span num="10">--- PASS: TestCounterSuite (0.00s)</span>
+<span num="11">    --- PASS: TestCounterSuite/SafeCounter (0.00s)</span>
+<span num="12">        --- PASS: TestCounterSuite/SafeCounter/TestCounterIncrementIncreasesValue (0.00s)</span>
+<span num="13">        --- PASS: TestCounterSuite/SafeCounter/TestCounterIncrementReset (0.00s)</span>
+<span num="14">    --- PASS: TestCounterSuite/UnsafeCounter (0.00s)</span>
+<span num="15">        --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementIncreasesValue (0.00s)</span>
+<span num="16">        --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementReset (0.00s)</span>
+<span num="17">PASS</span>
+<span num="18">ok      gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite    0.007s</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">36</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Suite - Addresses of *testing.T and counters</h3>
+        
+  <div class="code">
+
+
+<pre><span num="1">samples/ex3/test_suite $&gt; go test -d</span>
+<span num="2"></span>
+<span num="3">@@ TestCounterSuite : 0xc0000a6100 *testing.T</span>
+<span num="4">   ==== RunAllTests : 0xc0000a6200 *testing.T</span>
+<span num="5">        ===== Test1 : 0xc0000a6300 *testing.T</span>
+<span num="6">         \_ Counter : 0xc0000b0080 *safe_counter.safeCounter</span>
+<span num="7">        ===== Test2 : 0xc0000a6400 *testing.T</span>
+<span num="8">         \_ Counter : 0xc0000b00e0 *safe_counter.safeCounter</span>
+<span num="9">   ==== RunAllTests : 0xc0000a6500 *testing.T</span>
+<span num="10">        ===== Test1 : 0xc0000a6600 *testing.T</span>
+<span num="11">         \_ Counter : 0xc000070238 *unsafe_counter.unsafeCounter</span>
+<span num="12">        ===== Test2 : 0xc0000a6700 *testing.T</span>
+<span num="13">         \_ Counter : 0xc000070308 *unsafe_counter.unsafeCounter</span>
+<span num="14">PASS</span>
+<span num="15">ok      gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite    0.007s</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">37</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Before and After functions for Suite and Tests</h3>
+        
+  <div class="code">
+
+
+<pre><span num="117">func (s *suite) RunAllTests(t *testing.T) {</span>
+<span num="118">    //</span>
+<span num="119">    // Before and After Suite (defer &lt;After&gt;())</span>
+<span num="120">    //</span>
+<span num="121">    v := reflect.ValueOf(s)</span>
+<span num="122">    for n := 0; n &lt; v.NumMethod(); n++ {</span>
+<span num="123">        i := v.Method(n).Interface()</span>
+<span num="124">        if method, ok := i.(func(*testing.T)); ok {</span>
+<span num="125">            methodName := reflect.TypeOf(s).Method(n).Name</span>
+<span num="126">            if strings.HasPrefix(methodName, "Test") {</span>
+<span num="127">                // Before Test</span>
+<span num="128">                // (don't defer &lt;AfterTest&gt;() here, inside a loop)</span>
+<span num="129">                t.Run(methodName, method)</span>
+<span num="130">                // After Test</span>
+<span num="131">            }</span>
+<span num="132">        }</span>
+<span num="133">    }</span>
+<span num="134">}</span>
+</pre>
+
+
+</div>
+
+  
+  <p>
+    Use them more for test agnostic checks like timing, log, leak detection etc.
+<br>
+
+    Test code and its dependencies should remain within the test
+  </p>
+  
+
+      
+      <span class="pagenumber">38</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[EX3] Suite - Wrapper behavior</h3>
+        
+  <div class="code">
+
+
+<pre><span num="1">samples/ex3/test_suite $&gt; go test -w</span>
+<span num="2"></span>
+<span num="3">    &gt;&gt;&gt; [ RunAllTests -Before- ] &gt;&gt;&gt;            // SafeCounter</span>
+<span num="4"></span>
+<span num="5">        --- [ BeforeTest: TestCounterIncrementIncreasesValue ] ---</span>
+<span num="6">        --- [ AfterTest: TestCounterIncrementIncreasesValue ] ---</span>
+<span num="7">        --- [ BeforeTest: TestCounterIncrementReset ] ---</span>
+<span num="8">        --- [ AfterTest: TestCounterIncrementReset ] ---</span>
+<span num="9"></span>
+<span num="10">    &lt;&lt;&lt; [ RunAllTests -After- ] &lt;&lt;&lt;</span>
+<span num="11"></span>
+<span num="12">    &gt;&gt;&gt; [ RunAllTests -Before- ] &gt;&gt;&gt;            // UnsafeCounter</span>
+<span num="13"></span>
+<span num="14">        --- [ BeforeTest: TestCounterIncrementIncreasesValue ] ---</span>
+<span num="15">        --- [ AfterTest: TestCounterIncrementIncreasesValue ] ---</span>
+<span num="16">        --- [ BeforeTest: TestCounterIncrementReset ] ---</span>
+<span num="17">        --- [ AfterTest: TestCounterIncrementReset ] ---</span>
+<span num="18"></span>
+<span num="19">    &lt;&lt;&lt; [ RunAllTests -After- ] &lt;&lt;&lt;</span>
+<span num="20"></span>
+<span num="21">PASS</span>
+<span num="22">ok      gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite    0.007s</span>
+</pre>
+
+
+</div>
+
+      
+      <span class="pagenumber">39</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Suite - Advantages</h3>
+        
+  
+  <p>
+    1. Ability to define Suite local helper methods
+  </p>
+  
+
+  
+  <div class="code"><pre>func (s *suite) GenerateTestData()
+func (s *suite) DoSomethingAwesomeWith(c Counter)</pre></div>
+  
+
+  
+  <p>
+    2. Can be designed to accept multi-dimension inputs
+  </p>
+  
+
+  
+  <div class="code"><pre>Suite(c TestConfig, builder ()func Interface).RunAllTests
+- TestConfig := LocalFileSystem, InMemoryFileSystemAbstraction,
+                InMemoryDatabase, RealDatabase, etc.
+- builder    := Implementations under test</pre></div>
+  
+
+  
+  <p>
+    3. Custom test runner
+  </p>
+  
+
+  
+  <div class="code"><pre>Suite(..).RunAllTests
+Suite(..).RunSpecificTests
+Suite(..).RunPrivateTests
+          \_ RunPrivateTests exposes the runner, but hides the 'testMethods'
+             1. The suite could be published in a package
+             2. Consumer cannot modify the tests</pre></div>
+  
+
+      
+      <span class="pagenumber">40</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Suite usage [1/3]</h3>
+        
+  
+  <p>
+    The 'Counter' example was contrived and overdone on purpose of this presentation
+  </p>
+  
+
+  
+  <div class="code"><pre>INGREDIENTS:
+2 tests
+2 implementations
+1 fat 'Counter' interface (which happened to have all methods from the implementations)</pre></div>
+  
+
+  
+  <p>
+    The 'Counter' type of suite can work well when:
+  </p>
+  
+
+  
+  <div class="code"><pre>1. Large X -- Large number of tests to validate one input-set/implementation
+2. The tests effectively use all methods of the interface</pre></div>
+  
+
+  
+  <p>
+    Interfaces must be small and lean
+  </p>
+  
+
+  
+  <div class="code"><pre>1. If a Suite requires a fat interface, but clusters within the suite use a subset of interfaces.
+   
+   Problem  : THE SUITE IS TOO MIXED. It breaks single-responsibility-principle
+   Solution : Break the suite into smaller suites where:
+              - The interface footprint is smaller
+              - The cluser of tests now effectively use all methods</pre></div>
+  
+
+      
+      <span class="pagenumber">41</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Suite usage [2/3]</h3>
+        
+  
+  <p>
+    Reflection to iterate identify Test* methods and run them is not a necessity.
+<br>
+
+    The runner could also invoke 't.Run' multiple times.
+  </p>
+  
+
+  
+  <div class="code"><pre>PROS of reflection vs a manual list of 't.Run'
+- Works great for large number of tests
+- Proof against misspelt test names (strings, not TestFunction names)
+- Proof against maintenance of the 'Run' list
+
+CONS
+- Overkill</pre></div>
+  
+
+      
+      <span class="pagenumber">42</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Suite usage [3/3] - With 'Counter' as an example:</h3>
+        
+  
+  <p>
+    Suites satisfy necessity:
+  </p>
+  
+
+  
+  <div class="code"><pre>Example:
+1. TestCounterSuite tests basic counter functionality
+2. TestCounterSuite DID NOT test 'goroutine safety' in SafeCounter
+   Testing the goroutine safety of counters would be a different suite by itself</pre></div>
+  
+
+  
+  <p>
+    Interface to Suite is not 1:1:
+  </p>
+  
+
+  
+  <div class="code"><pre>Example:
+An implementation which returns numbers from the fibonacci series
+on 'Increment()' could still satisfy the 'Counter' interface, but
+fail TestCounterSuite</pre></div>
+  
+
+      
+      <span class="pagenumber">43</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>Guidelines &amp; best practices</h2>
+      
+      <span class="pagenumber">44</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Avoid ...</h3>
+        
+  
+  <div class="code"><pre>1. MUST NOT:
+Share state between tests
+- Stateful Suite members with testdata
+- State dependent on order of test execution
+
+2. SHOULD NOT:
+- Perform excessive Setup or Teardown outside the test function
+- This should be invoked from within each test function per test.
+- Copy-paste is not considered (as) bad in testing (but don't overdo)
+
+3. SHOULD NOT:
+Make the Suite complex any more than it should be.
+- Core Suite responsiblity: (single responsibility principle)
+    a) Encapsulate a collection of tests
+    b) Provide runner(s) to execute those tests
+- Extend responsibly
+- "Test" is the king. "Suite" is the helper.</pre></div>
+  
+
+      
+      <span class="pagenumber">45</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Application code vs Test code [1/2]</h3>
+        
+  
+  <div class="code"><pre>Handler {                   |  Runner {
+    Middleware1 {           |      TestFunction {
+        Middleware2 {       |          Env Setup+ defer Teardown
+            BusinessCode {} |          Test Setup+ defer Teardown
+        }                   |          Test Logic
+    }                       |      }
+}                           |  }
+----------------------------+-------------------------------------
+ This is a common pattern   |  Everything that happens in a test,
+    in application code     |       remains within the test!
+----------------------------+-------------------------------------</pre></div>
+  
+
+  
+  <p>
+    +
+  </p>
+  
+
+  
+  <div class="code"><pre>- Setup and Teardown should be invoked from within the test.
+- If a test fails, you should only have to look into the code
+  within the failing test</pre></div>
+  
+
+      
+      <span class="pagenumber">46</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Application code vs Test code [1/2]</h3>
+        
+  
+  <p>
+    Good
+  </p>
+  
+
+  
+  <div class="code"><pre>&lt;--------- code under test ----------&gt;    \
+                  ^                        \
+                  |                         | Keep this distance minimum. Ideally next hop.
+                  |                        /
+&lt;------------ test code -------------&gt;    /</pre></div>
+  
+
+  
+  <p>
+    Try to avoid
+  </p>
+  
+
+  
+  <div class="code"><pre>&lt;--------- code under test ----------&gt;    \
+                  ^                        \
+         calls something else               | Affects readability. Increases test code footprint
+            calls something                /
+&lt;------------ test code -------------&gt;    /
+
+1. Test code nested through many calls can affect readability
+2. Larger test code footprint -&gt; More chances of bugs in test code
+3. If distributed across multiple files, then fragmented test code
+   affects readability further.
+
+&gt;&gt; Simple vs Easy &lt;&lt;</pre></div>
+  
+
+      
+      <span class="pagenumber">47</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Examples from go and stdlib</h3>
+        
+  
+  <p>
+    Some examples which I found interesting (related to subtests &amp; test data)
+  </p>
+  
+
+  
+  <p>
+    Ref: <a href="https://golang.org/src/cmd/go/go_test.go" target="_blank">golang.org/src/cmd/go/go_test.go</a>
+  </p>
+  
+
+  
+  <div class="code"><pre>testgoData
+\__ Use of helper functions and their usage in tests</pre></div>
+  
+
+  
+  <p>
+    Ref: <a href="https://golang.org/src/net/http/response_test.go" target="_blank">golang.org/src/net/http/response_test.go</a>
+  </p>
+  
+
+  
+  <div class="code"><pre>Data driven</pre></div>
+  
+
+  
+  <p>
+    Ref: <a href="https://golang.org/src/cmd/gofmt/gofmt_test.go" target="_blank">golang.org/src/cmd/gofmt/gofmt_test.go</a>
+  </p>
+  
+
+  
+  <div class="code"><pre>Use of golden files</pre></div>
+  
+
+      
+      <span class="pagenumber">48</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>PART II - Test Fixtures &amp; Helpers</h2>
+      
+      <span class="pagenumber">49</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Test Fixtures and Helpers</h3>
+        
+  
+  <p>
+    Help you prepare the environment and test data to run your test.
+  </p>
+  
+
+  
+  <div class="code"><pre>Setup     - Stuff you do before the test logic begins
+Teardown  - Stuff you do after a test has PASSED or FAILED.
+            The teardown will 'undo' what Setup did.</pre></div>
+  
+
+  
+  <p>
+    When to use it?
+  </p>
+  
+
+  
+  <div class="code"><pre>1. If you need to read/write to temp files on the filesystem
+2. Talk to a database
+3. Talk to a server over the network
+4. Assemble a complex piece of testdata to test with
+5. Test resilience or error handling in failure scenarios
+etc.</pre></div>
+  
+
+      
+      <span class="pagenumber">50</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[F1] Setup-Only</h3>
+        
+  
+  <p>
+    Example: The Builders from the 'Counter' Suite
+  </p>
+  
+
+  
+  <p>
+    Everything happens in-memory. No persistent state changes anywhere.
+<br>
+
+    Use-and-throw. Nothing to teardown.
+  </p>
+  
+
+  
+  <p>
+    Generalized example:
+  </p>
+  
+
+  
+  <div class="code"><pre>func BuildSomethingComplex(&lt;args&gt;) &lt;someType&gt; {
+    //
+    //  Assemble dependencies,
+    //  Generate randomized data, templates, etc
+    //  specifically tuned as an input for testing
+    //
+    return &lt;someType&gt;
+}</pre></div>
+  
+
+  
+  <p>
+    A good practice is to assemble a new instance of every ingredient.
+<br>
+
+    Each test gets a fresh copy of incredients.
+<br>
+
+    Lowers the risk of errors due to ingredients having some past state.
+  </p>
+  
+
+      
+      <span class="pagenumber">51</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[F2] Idempotent Teardowns</h3>
+        
+  
+  <p>
+    1. Teardown (cleanup) functions which can be run anywhere.
+<br>
+
+    2. Can be run both before and after tests.
+<br>
+
+    3. If state is clean, Teardown does nothing.
+<br>
+
+    4. If not, Teardown will clean it up.
+<br>
+
+    5. If an error occurs with Teardown, its a catastrophic failure. Future tests may be invalid.
+<br>
+
+       (if the setup/teardown involves global-scope environment changes)
+  </p>
+  
+
+      
+      <span class="pagenumber">52</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>Fixture example and its usage</h3>
+        
+  
+  <p>
+    Ref: <a href="https://golang.org/src/syscall/syscall_linux_test.go" target="_blank">golang.org/src/syscall/syscall_linux_test.go</a>
+  </p>
+  
+
+  
+  <div class="code"><pre>[1] chtmpdir
+[2] Usage of chtmpdir in: TestFaccessat</pre></div>
+  
+
+      
+      <span class="pagenumber">53</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[F3] Setup; return Teardown func() on success</h3>
+        
+  
+  <div class="code"><pre>func fixture(t *testing.T) func() {
+    // setup
+    if err != nil {
+        t.Fatal(..errorMsg..)
+    }
+    return func() {
+        // teardown
+    }
+}</pre></div>
+  
+
+  
+  <p>
+    Usage:
+  </p>
+  
+
+  
+  <div class="code"><pre>func TestFunction(t *testing.T) {
+    defer fixture(t)()
+      ^      ^      ^
+      |      |      +____ This () is for the returned teardown func()
+      |      |
+      |      +___________ Fixture does setup and returns a teardown func()
+      |
+      +__________________ Deferred: Hence, guaranteed execution after the
+    ...                   TestFunction completes execution
+}</pre></div>
+  
+
+      
+      <span class="pagenumber">54</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[F4, F5] Some other variants</h3>
+        
+  
+  <p>
+    [F4] Return data, resources for the test along with teardown func
+  </p>
+  
+
+  
+  <div class="code"><pre>func TestFunction(t *testing.T) {
+    resource, teardown := fixture(t)
+    defer teardown()
+    //
+    //  test code uses resource
+    //
+    ...
+}</pre></div>
+  
+
+  
+  <p>
+    [F5] Return a struct on which teardown is a method (amongst other fields &amp; methods)
+  </p>
+  
+
+  
+  <div class="code"><pre>func TestFunction(t *testing.T) {
+    strukt := fixture(t)        // returns a struct with extended functionality
+    defer strukt.teardown()     // cleanup
+    //
+    //  strukt.&lt;fields&gt; and struct.&lt;methods&gt; get used in the test
+    //
+    ...
+}</pre></div>
+  
+
+      
+      <span class="pagenumber">55</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[G1] Gotcha: Teardown func() is returned only on successful setup</h3>
+        
+  
+  <div class="code"><pre>func LeakingFixture(t *testing.T) func() {
+    var err error
+    err = Step1()
+    if err != nil { t.Fatalf("Failed Step 1") }
+    err = Step2()
+    if err != nil { t.Fatalf("Failed Step 2") }
+
+    return func() { ..teardown.. }
+}</pre></div>
+  
+
+  
+  <p>
+    If Step2 fails fatally, and Step1 has made a system-scope
+<br>
+
+    state change, that change leaks. Test and teardown are skipped.
+  </p>
+  
+
+      
+      <span class="pagenumber">56</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[G1] Solution</h3>
+        
+  
+  <p>
+    Fixture functions which setup first and return a teardown func() must:
+  </p>
+  
+
+  
+  <div class="code"><pre>1. Raise t.Fatal against the first state change causing code.
+2. No more state change causing code must be part of that fixture.
+3. A teardown func() would thus not have to run on t.Fatal as:
+    - The error was caused while making the first state change
+4. When the setup does succeed, the teardown concerns itself with
+   reverting the one state change that succeeded.</pre></div>
+  
+
+  
+  <p>
+    Tests can stack multiple individual fixtures of this nature:
+  </p>
+  
+
+  
+  <div class="code"><pre>func TestSomethingInIsolation(t *testing.T) func {
+    defer requireContainer(t)()             // idempotent setup &amp; teardown
+    defer requireSystemTestConfig(t)()      // idempotent setup &amp; teardown
+    defer requireSwitchToContainer(t)()     // idempotent setup &amp; teardown
+    //
+    //  subprocess go test cmd to re-run this test inside
+    //  a container
+    //
+}</pre></div>
+  
+
+      
+      <span class="pagenumber">57</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h3>[G2] Gotcha: Forget parantheses on deferred call</h3>
+        
+  
+  <p>
+    If you skip the () in defer, then Setup runs after the test!
+<br>
+
+    The code is still valid if you miss the parantheses. So, be vigilant.
+  </p>
+  
+
+  
+  <div class="code"><pre>defer AyyoFixture(t)()
+                     \__ Don't miss this</pre></div>
+  
+
+  
+  <p>
+    Alternatives -&gt; Fixture formats [F4] and [F5]
+  </p>
+  
+
+  
+  <p>
+    They return values, which ask for an explicit defer call of the teardown func
+<br>
+
+    on the subsequent line. This makes it readable.
+  </p>
+  
+
+      
+      <span class="pagenumber">58</span>
+      </article>
+  
+  
+  
+      <article class="">
+      
+        <h2>Q&amp;A</h2>
+      
+      <span class="pagenumber">59</span>
+      </article>
+  
+  
+
+      <article class="">
+        <h3>Thank you</h3>
+        
+          <div class="presenter">
+            
+  
+  <p>
+    Golang Bangalore - Meetup 36
+  </p>
+  
+
+  
+  <p>
+    8th Sept 2018
+  </p>
+  
+
+          </div>
+        
+          <div class="presenter">
+            <p class="link"><a href="#ZgotmplZ" target="_blank">Tags: golang, patterns, testing, unittest, helpers, fixtures, suite</a></p>
+          </div>
+        
+          <div class="presenter">
+            
+  
+  <p>
+    Praveen G Shirali
+  </p>
+  
+<p class="link"><a href="mailto:praveengshirali@gmail.com" target="_blank">praveengshirali@gmail.com</a></p>
+          </div>
+        
+          <div class="presenter">
+            <p class="link"><a href="https://gitlab.com/pshirali/testing-in-go" target="_blank">https://gitlab.com/pshirali/testing-in-go</a></p>
+          </div>
+        
+          <div class="presenter">
+            
+  
+  <p>
+    
+  </p>
+  
+
+          </div>
+        
+      </article>
+
+    <div class="slide-area" id="prev-slide-area"></div><div class="slide-area" id="next-slide-area"></div></section>
+
+    <div id="help" style="display: none;">
+      Use the left and right arrow keys or click the left and right
+      edges of the page to navigate between slides.<br>
+      (Press 'H' or navigate to hide this message.)
+    </div>
+
+    
+    <script src="Testing_In_Go_files/play.js"></script>
+    
+
+    <script>
+      (function() {
+        
+        if (window["location"] && window["location"]["hostname"] == "talks.golang.org") {
+          var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
+          ga.src = ("https:" == document.location.protocol ? "https://ssl" : "http://www") + ".google-analytics.com/ga.js";
+          var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
+        }
+      })();
+    </script>
+  
+
+<link rel="stylesheet" type="text/css" href="Testing_In_Go_files/css_003.css"><link rel="stylesheet" type="text/css" href="Testing_In_Go_files/styles.css"></body></html>
