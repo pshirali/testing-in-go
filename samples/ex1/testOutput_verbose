@@ -1,0 +1,5 @@
+=== RUN   TestExample
+--- PASS: TestExample (0.00s)
+    sample_test.go:6: Hello World!
+PASS
+ok  	gitlab.com/pshirali/testing-in-go/samples/ex1	0.006s

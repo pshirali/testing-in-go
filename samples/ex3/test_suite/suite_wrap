@@ -1,0 +1,22 @@
+samples/ex3/test_suite $> go test -w
+
+    >>> [ RunAllTests -Before- ] >>>            // SafeCounter
+
+        --- [ BeforeTest: TestCounterIncrementIncreasesValue ] ---
+        --- [ AfterTest: TestCounterIncrementIncreasesValue ] ---
+        --- [ BeforeTest: TestCounterIncrementReset ] ---
+        --- [ AfterTest: TestCounterIncrementReset ] ---
+
+    <<< [ RunAllTests -After- ] <<<
+
+    >>> [ RunAllTests -Before- ] >>>            // UnsafeCounter
+
+        --- [ BeforeTest: TestCounterIncrementIncreasesValue ] ---
+        --- [ AfterTest: TestCounterIncrementIncreasesValue ] ---
+        --- [ BeforeTest: TestCounterIncrementReset ] ---
+        --- [ AfterTest: TestCounterIncrementReset ] ---
+
+    <<< [ RunAllTests -After- ] <<<
+
+PASS
+ok  	gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s

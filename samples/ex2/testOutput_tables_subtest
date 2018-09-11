@@ -1,0 +1,16 @@
+=== RUN   TestAdderUsingSubtests
+=== RUN   TestAdderUsingSubtests/Empty
+=== RUN   TestAdderUsingSubtests/Zero
+=== RUN   TestAdderUsingSubtests/Negative
+=== RUN   TestAdderUsingSubtests/Positive
+--- PASS: TestAdderUsingSubtests (0.00s)
+    --- PASS: TestAdderUsingSubtests/Empty (0.00s)
+        adder_test.go:45: -------------------- Adding: []
+    --- PASS: TestAdderUsingSubtests/Zero (0.00s)
+        adder_test.go:45: -------------------- Adding: [0 0 0]
+    --- PASS: TestAdderUsingSubtests/Negative (0.00s)
+        adder_test.go:45: -------------------- Adding: [-1 -2]
+    --- PASS: TestAdderUsingSubtests/Positive (0.00s)
+        adder_test.go:45: -------------------- Adding: [1 2 3]
+PASS
+ok  	gitlab.com/pshirali/testing-in-go/samples/ex2	0.007s

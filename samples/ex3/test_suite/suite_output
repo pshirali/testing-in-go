@@ -1,0 +1,18 @@
+samples/ex3/test_suite $> go test -v
+
+=== RUN   TestCounterSuite
+=== RUN   TestCounterSuite/SafeCounter
+=== RUN   TestCounterSuite/SafeCounter/TestCounterIncrementIncreasesValue
+=== RUN   TestCounterSuite/SafeCounter/TestCounterIncrementReset
+=== RUN   TestCounterSuite/UnsafeCounter
+=== RUN   TestCounterSuite/UnsafeCounter/TestCounterIncrementIncreasesValue
+=== RUN   TestCounterSuite/UnsafeCounter/TestCounterIncrementReset
+--- PASS: TestCounterSuite (0.00s)
+    --- PASS: TestCounterSuite/SafeCounter (0.00s)
+        --- PASS: TestCounterSuite/SafeCounter/TestCounterIncrementIncreasesValue (0.00s)
+        --- PASS: TestCounterSuite/SafeCounter/TestCounterIncrementReset (0.00s)
+    --- PASS: TestCounterSuite/UnsafeCounter (0.00s)
+        --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementIncreasesValue (0.00s)
+        --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementReset (0.00s)
+PASS
+ok  	gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s

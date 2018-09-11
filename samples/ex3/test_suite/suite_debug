@@ -1,0 +1,15 @@
+samples/ex3/test_suite $> go test -d
+
+@@ TestCounterSuite : 0xc0000a6100 *testing.T
+   ==== RunAllTests : 0xc0000a6200 *testing.T
+        ===== Test1 : 0xc0000a6300 *testing.T
+         \_ Counter : 0xc0000b0080 *safe_counter.safeCounter
+        ===== Test2 : 0xc0000a6400 *testing.T
+         \_ Counter : 0xc0000b00e0 *safe_counter.safeCounter
+   ==== RunAllTests : 0xc0000a6500 *testing.T
+        ===== Test1 : 0xc0000a6600 *testing.T
+         \_ Counter : 0xc000070238 *unsafe_counter.unsafeCounter
+        ===== Test2 : 0xc0000a6700 *testing.T
+         \_ Counter : 0xc000070308 *unsafe_counter.unsafeCounter
+PASS
+ok  	gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s

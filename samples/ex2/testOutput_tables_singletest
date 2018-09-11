@@ -1,0 +1,8 @@
+=== RUN   TestAdderUsingTable
+--- PASS: TestAdderUsingTable (0.00s)
+    adder_test.go:20: -------------------- Adding: []
+    adder_test.go:20: -------------------- Adding: [0 0 0]
+    adder_test.go:20: -------------------- Adding: [-1 -2]
+    adder_test.go:20: -------------------- Adding: [1 2 3]
+PASS
+ok  	gitlab.com/pshirali/testing-in-go/samples/ex2	0.007s
