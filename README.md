@@ -20,7 +20,7 @@ Navigate to `http://127.0.0.1:3999` to view the contents.
 
 ### Code Samples
 
-Code samples are present in the `samples/` folder. They have a [README](samples/README/md) which explain the contents of each folder in further detail.
+Code samples are present in the `samples/` folder. They have a [README](samples/README.md) which explain the contents of each folder in further detail.
 
 ### License
 
