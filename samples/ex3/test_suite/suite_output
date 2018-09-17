@@ -15,4 +15,4 @@ samples/ex3/test_suite $> go test -v
         --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementIncreasesValue (0.00s)
         --- PASS: TestCounterSuite/UnsafeCounter/TestCounterIncrementReset (0.00s)
 PASS
-ok  	gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s
+ok  	github.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s

@@ -17,7 +17,7 @@ package test_normal
 // NOTE: The dot import has been used here to condense the data on the slides.
 //       AVOID: '. <import-path' in your code.
 import (
-	. "gitlab.com/pshirali/testing-in-go/samples/ex3/unsafe_counter"
+	. "github.com/pshirali/testing-in-go/samples/ex3/unsafe_counter"
 	"testing"
 )
 

@@ -3,14 +3,14 @@
 This repo contains a presentation and code samples from a talk I gave
 at Golang Bangalore Meetup 36 on September 8th 2018.
 
-*The slides can be viewed online [here](https://pshirali.gitlab.io/testing-in-go)*
+*The slides can be viewed online [here](https://pshirali.github.io/testing-in-go)*
 
 ### View this presentation offline
 
 If you have a Go environment, you can run the following to view the slides offline
 
 ```
-git clone https://gitlab.com/pshirali/testing-in-go
+git clone https://github.com/pshirali/testing-in-go
 go get -u -v golang.org/x/tools/cmd/present
 cd testing-in-go
 present -notes

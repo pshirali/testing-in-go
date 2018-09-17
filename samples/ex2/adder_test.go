@@ -15,7 +15,7 @@
 package adder_test
 
 import (
-	"gitlab.com/pshirali/testing-in-go/samples/ex2"
+	"github.com/pshirali/testing-in-go/samples/ex2"
 	"testing"
 )
 

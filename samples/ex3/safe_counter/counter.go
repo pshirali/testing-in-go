@@ -15,8 +15,8 @@
 package safe_counter
 
 import (
-	. "gitlab.com/pshirali/testing-in-go/samples/ex3/counter"
-	. "gitlab.com/pshirali/testing-in-go/samples/ex3/unsafe_counter"
+	. "github.com/pshirali/testing-in-go/samples/ex3/counter"
+	. "github.com/pshirali/testing-in-go/samples/ex3/unsafe_counter"
 	"sync"
 )
 

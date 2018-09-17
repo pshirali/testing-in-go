@@ -18,8 +18,8 @@ package main
 //       AVOID: '. <import-path' in your code.
 import (
 	"fmt"
-	. "gitlab.com/pshirali/testing-in-go/samples/ex3/counter"
-	. "gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite"
+	. "github.com/pshirali/testing-in-go/samples/ex3/counter"
+	. "github.com/pshirali/testing-in-go/samples/ex3/test_suite"
 )
 
 func dumpInstances(count int, counterBuilder func() Counter) {

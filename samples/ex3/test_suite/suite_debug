@@ -12,4 +12,4 @@ samples/ex3/test_suite $> go test -d
         ===== Test2 : 0xc0000a6700 *testing.T
          \_ Counter : 0xc000070308 *unsafe_counter.unsafeCounter
 PASS
-ok  	gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s
+ok  	github.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s

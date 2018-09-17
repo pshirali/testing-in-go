@@ -13,4 +13,4 @@
     --- PASS: TestAdderUsingSubtests/Positive (0.00s)
         adder_test.go:45: -------------------- Adding: [1 2 3]
 PASS
-ok  	gitlab.com/pshirali/testing-in-go/samples/ex2	0.007s
+ok  	github.com/pshirali/testing-in-go/samples/ex2	0.007s

@@ -19,4 +19,4 @@ samples/ex3/test_suite $> go test -w
     <<< [ RunAllTests -After- ] <<<
 
 PASS
-ok  	gitlab.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s
+ok  	github.com/pshirali/testing-in-go/samples/ex3/test_suite	0.007s
